@@ -100,8 +100,6 @@ ifeq ($(ENV),pipenv)
 		pipenv lock
 		pipenv update
 endif
-	@echo this does not work on WSL so you need to run pre-commit install manually
-	[[ -e .pre-commit-config.yaml ]] && $(RUN) pre-commit install || true
 
 
 # https://medium.com/@Tankado95/how-to-generate-a-documentation-for-python-code-using-pdoc-60f681d14d6e

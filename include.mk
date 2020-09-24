@@ -35,6 +35,8 @@ tag:
 pre-commit:
 	[[ -e .pre-commit-config.yaml ]] && $(RUN) pre-commit autoupdate || true
 	[[ -e .pre-commit-config.yaml ]] && $(RUN) pre-commit run --all-files || true
+	@echo this does not work on WSL so you need to run pre-commit install manually
+	[[ -e .pre-commit-config.yaml ]] && $(RUN) pre-commit install || true
 
 
 ## gcloud: push up to Google Cloud

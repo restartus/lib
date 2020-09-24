@@ -1,5 +1,4 @@
 #
-#
 ##
 ## Base commands: not language specific
 #
@@ -41,6 +40,7 @@ pre-commit:
 .PHONY: repo-init
 repo-init:
 	git lfs install
+	git lfs pull
 	[[ -e .pre-commit-config.yaml ]] && $(RUN) pre-commit install || true
 
 

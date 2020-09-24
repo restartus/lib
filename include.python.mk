@@ -13,8 +13,13 @@
 #
 FLAGS ?=
 SHELL ?= /bin/bash
-all_py = $$(find . -name "*.py")
-all_yaml = $$(find . -name "*.yaml")
+# does not work the excluded directories are still listed
+# https://www.theunixschool.com/2012/07/find-command-15-examples-to-exclude.html
+# exclude := -type d \( -name extern -o -name .git \) -prune -o
+# https://stackoverflow.com/questions/4210042/how-to-exclude-a-directory-in-find-command
+exclude := -not \( -path "./extern/*" -o -path "./.git/" \)
+all_py := $$(find . -name "*.py" $(exclude) )
+all_yaml := $$(find . -name "*.yaml" $(exclude))
 # gitpod needs three digits
 PYTHON ?= 3.8.5
 DOC ?= doc
@@ -22,6 +27,8 @@ LIB ?= lib
 name ?= $$(basename $(PWD))
 MAIN ?= $(name).py
 STREAMLIT ?= $(MAIN)
+ED ?=
+ED_DIR ?= .
 # As of September 2020, run jupyter 0.2 and this generates a pipenv error
 # so ignore it
 PIPENV_CHECK_FLAGS ?= --ignore 38212
@@ -80,6 +87,11 @@ test-type:
 .PHONY: update
 update:
 	$(UPDATE)
+
+## vi: run the editor in the right environment
+.PHONY: vi
+vi:
+	cd $(ED_DIR) && $(RUN) "$$VISUAL" $(ED)
 
 ## install: install packages
 # Note that black is still prelease so need --pre
@@ -168,7 +180,7 @@ conda:
 ## lint : code check (conda)
 .PHONY: lint
 lint:
-	$(RUN) flake8
+	$(RUN) flake8 || true
 ifdef all_py
 	$(RUN) seed-isort-config ||true
 	$(RUN) mypy --namespace-packages $(all_py) || true
@@ -176,6 +188,7 @@ ifdef all_py
 	$(RUN) pydocstyle --convention=google $(all_py) || true
 endif
 ifdef all_yaml
+	echo $$PWD
 	$(RUN) yamllint $(all_yaml) || true
 endif
 
@@ -190,8 +203,6 @@ endif
 .PHONY: pipenv-lint
 pipenv-lint: lint
 	pipenv check $(PIPENV_CHECK_FLAGS)
-
-## Installation helpers (users should not need to invoke):
 
 ## pipenv-python: Install python version in
 # also add to the python path

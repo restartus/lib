@@ -1,0 +1,15 @@
+.sconsign.dblite
+.DS_Store
+*.sublime-project
+sublime-workspace
+*.cache
+*.bak
+*~
+*.pyc
+*.swp
+*cscope.out
+*cscope.po.out
+*cscope.in.out
+.ctags
+/scons.err
+/scons.log

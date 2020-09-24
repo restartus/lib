@@ -1,0 +1,32 @@
+# For the main source repo with random stuff in it
+# tried dockerfilelint but too strict and disabling does not work
+# cannot run shellcheck yet need to edit gradually
+# cannot run check-json because notebooks do not conform
+# cannot run check-executables-have-shebangs because of classes
+# cannot run check-builtin-literals due to foreign python code
+---
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v3.2.0
+    hooks:
+      - id: check-added-large-files
+      - id: check-case-conflict
+      # - id: check-builtin-literals
+      # - id: check-executables-have-shebangs
+      # - id: check-json
+      - id: check-merge-conflict
+      - id: check-yaml
+        args: [--allow-multiple-documents]
+      - id: check-symlinks
+      - id: check-toml
+      - id: check-yaml
+      - id: detect-aws-credentials
+      - id: detect-private-key
+      - id: end-of-file-fixer
+      - id: mixed-line-ending
+      - id: trailing-whitespace
+
+# - repo: https://github.com/jumanjihouse/pre-commit-hooks
+#   rev: 2.1.4
+# hooks:
+# - id: shellcheck

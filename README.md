@@ -17,7 +17,7 @@ cd rt
 git submodule add git@github.com:richtong/lib
 ```
 
-If you want to install pre-commit checks then `make pre-commit` will do that.
+If you want to install pre-commit checks then `make repo-init` will do that.
 
 Feel free to submit pull requests
 

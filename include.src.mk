@@ -1,6 +1,6 @@
 PYTHON=3.8.5
 PACKAGES+=make vim gosu
-PIP+=pandas confuse ipysheet pyomo h5py
+PIP+=pandas confuse ipysheet pyomo h5py restart_datasets
 		   # pyyaml xlrd
 PIP_ONLY+=tables
 # These are for development time

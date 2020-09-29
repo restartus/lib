@@ -11,9 +11,9 @@ repos:
     hooks:
       - id: check-added-large-files
       - id: check-case-conflict
-      # - id: check-builtin-literals
-      # - id: check-executables-have-shebangs
-      # - id: check-json
+      - id: check-builtin-literals
+      - id: check-executables-have-shebangs
+      - id: check-json
       - id: check-merge-conflict
       - id: check-yaml
         args: [--allow-multiple-documents]
@@ -26,7 +26,9 @@ repos:
       - id: mixed-line-ending
       - id: trailing-whitespace
 
-# - repo: https://github.com/jumanjihouse/pre-commit-hooks
-#   rev: 2.1.4
-# hooks:
-# - id: shellcheck
+  - repo: https://github.com/jumanjihouse/pre-commit-hooks
+    rev: 2.1.4
+    hooks:
+      - id: markdownlint
+      - id: shellcheck
+      - id: shfmt

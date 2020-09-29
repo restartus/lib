@@ -18,8 +18,8 @@ SHELL ?= /bin/bash
 # exclude := -type d \( -name extern -o -name .git \) -prune -o
 # https://stackoverflow.com/questions/4210042/how-to-exclude-a-directory-in-find-command
 exclude := -not \( -path "./extern/*" -o -path "./.git/" \)
-all_py := $$(find . -name "*.py" $(exclude) )
-all_yaml := $$(find . -name "*.yaml" $(exclude))
+all_py := $$(find restart -name "*.py" $(exclude) )
+all_yaml := $$(find restart -name "*.yaml" $(exclude))
 # gitpod needs three digits
 PYTHON ?= 3.8.5
 DOC ?= doc

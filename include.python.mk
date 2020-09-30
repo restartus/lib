@@ -25,7 +25,7 @@ PYTHON ?= 3.8.5
 DOC ?= doc
 LIB ?= lib
 name ?= $$(basename $(PWD))
-MAIN ?= $(name).py
+MAIN ?= $(name)
 STREAMLIT ?= $(MAIN)
 ED ?=
 ED_DIR ?= .
@@ -63,6 +63,21 @@ else ifeq ($(ENV),none)
 	INSTALL_DEV := $(INSTALL)
 endif
 
+
+## main: run the main program
+.PHONY: main
+main:
+	$(RUN) python -m $(MAIN) $(FLAGS)
+
+## pdb: run locally with python to test components from main
+.PHONY: pdb
+pdb:
+	$(RUN) python -m pdb -m $(MAIN) $(FLAGS)
+
+## debug: run with debug model on for main
+.PHONY: debug
+debug:
+	$(RUN) python -d -m $(MAIN) $(FLAGS)
 
 # test-env: Test environment
 .PHONY: test-env

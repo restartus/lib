@@ -119,7 +119,7 @@ then
             if cask_is_installed "$cask"
             then
                 # found it already there make sure it is up to date
-                brew cask upgrade "$cask"
+                brew upgrade --cask "$cask"
                 continue
             fi
             # assumes Artifacts are last and right after the Artifact word using

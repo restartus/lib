@@ -49,7 +49,7 @@ ifeq ($(ENV),pipenv)
 	INSTALL_DEV := $(INSTALL) --dev --pre
 else ifeq ($(ENV),conda)
 	RUN := conda run -n $(name)
-	ACTIVATE := eval "$$(conda shell.bash hook)" &&
+	ACTIVATE := eval "$$(conda shell.bash hook)" && conda activate $(name)
 	UPDATE := $(RUN) conda update --all
 	INSTALL := conda install -y -n $(name)
 	INSTALL_DEV := $(INSTALL)
@@ -114,10 +114,11 @@ vi:
 install:
 ifeq ($(ENV),conda)
 		conda env list | grep ^$(name) || conda create -y --name $(name)
-		$(ACTIVATE) conda activate $(name)
+		$(ACTIVATE)
 		conda config --env --add channels conda-forge
 		conda config --env --set channel_priority strict
 		conda install --name $(name) -y python=$(PYTHON)
+		conda env update --name $(name) -f environment.yml
 endif
 	$(INSTALL) $(PIP) || true
 	$(INSTALL_DEV) $(PIP_DEV) || true

@@ -29,7 +29,7 @@ repos:
     hooks:
       - id: mypy
   - repo: https://github.com/pycqa/flake8
-    rev: 3.8.3
+    rev: 3.9
     hooks:
       - id: flake8
   - repo: https://github.com/pycqa/pydocstyle
@@ -57,7 +57,7 @@ repos:
     rev: 20.8b1
     hooks:
       - id: black
-        language_version: python3.8
+        language_version: python3.9
         args: [-l 79]
   # check shell scripts you check in
   - repo: git://github.com/detailyang/pre-commit-shell

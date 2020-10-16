@@ -1,5 +1,4 @@
-## Model user commands:
-# Python Makefile template (install python 3.8 and test tools)CTI
+# Model user commands:
 # Configure by setting PIP for pip packages and optionally name
 # requires include.mk
 #
@@ -21,7 +20,7 @@ exclude := -not \( -path "./extern/*" -o -path "./.git/" \)
 all_py := $$(find restart -name "*.py" $(exclude) )
 all_yaml := $$(find restart -name "*.yaml" $(exclude))
 # gitpod needs three digits
-PYTHON ?= 3.8.5
+PYTHON ?= 3.8
 DOC ?= doc
 LIB ?= lib
 name ?= $$(basename $(PWD))
@@ -47,12 +46,15 @@ ifeq ($(ENV),pipenv)
 	UPDATE := pipenv update
 	INSTALL := pipenv install
 	INSTALL_DEV := $(INSTALL) --dev --pre
+	# conditional dependency https://stackoverflow.com/questions/59867140/conditional-dependencies-in-gnu-make
+	INSTALL_REQ = pipenv-python
 else ifeq ($(ENV),conda)
 	RUN := conda run -n $(name)
 	ACTIVATE := eval "$$(conda shell.bash hook)" && conda activate $(name)
 	UPDATE := $(RUN) conda update --all
 	INSTALL := conda install -y -n $(name)
 	INSTALL_DEV := $(INSTALL)
+	INSTALL_REQ = conda-clean
 else ifeq ($(ENV),none)
 	RUN :=
 	ACTIVATE :=
@@ -61,6 +63,7 @@ else ifeq ($(ENV),none)
 	UPDATE := :
 	INSTALL :=
 	INSTALL_DEV := $(INSTALL)
+	INSTALL_REQ := 
 endif
 
 
@@ -108,10 +111,8 @@ update:
 vi:
 	cd $(ED_DIR) && $(RUN) "$$VISUAL" $(ED)
 
-## install: install packages
-# Note that black is still prelease so need --pre
 .PHONY: install
-install:
+install: $(INSTALL_REQ)
 ifeq ($(ENV),conda)
 		conda env list | grep ^$(name) || conda create -y --name $(name)
 		$(ACTIVATE)

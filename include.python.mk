@@ -52,7 +52,7 @@ else ifeq ($(ENV),conda)
 	RUN := conda run -n $(name)
 	INIT := eval "$$(conda shell.bash hook)"
 	ACTIVATE := $(INIT) && conda activate $(name)
-	UPDATE := $(RUN) conda update --all
+	UPDATE := conda update --all -y
 	INSTALL := conda install -y -n $(name)
 	INSTALL_DEV := $(INSTALL)
 	INSTALL_REQ = conda-clean
@@ -63,7 +63,7 @@ else ifeq ($(ENV),none)
 	# https://stackoverflow.com/questions/12404661/what-is-the-use-case-of-noop-in-bash
 	UPDATE := :
 	INSTALL :=
-	INSTALL_DEV := $(INSTALL)
+	INSTALL_DEV :=
 	INSTALL_REQ := 
 endif
 
@@ -102,7 +102,7 @@ PIP_ONLY ?=
 test-type:
 	@echo 'SRC="$(SRC)" NB="$(NB)" STREAMLIT="$(STREAMLIT)"'
 
-## update: installs all pipenv packages
+## update: installs all  packages
 .PHONY: update
 update:
 	$(UPDATE)
@@ -115,16 +115,24 @@ vi:
 .PHONY: install
 install: $(INSTALL_REQ)
 ifeq ($(ENV),conda)
-		conda env list | grep ^$(name) || conda create -y --name $(name)
-		$(ACTIVATE)
-		conda config --env --add channels conda-forge
-		conda config --env --set channel_priority strict
-		conda install --name $(name) -y python=$(PYTHON)
-		[[ -r environment.yml ]] && conda env update --name $(name) -f environment.yml
+	conda env list | grep ^$(name) || conda create -y --name $(name)
+	$(ACTIVATE)
+	# not clear if we need conda-forge
+	# conda config --env --add channels conda-forge
+	# conda config --env --set channel_priority strict
+	conda install --name $(name) -y python=$(PYTHON)
+	[[ -r environment.yml ]] && conda env update --name $(name) -y -f environment.yml || true
 endif
+# https://stackoverflow.com/questions/38801796/makefile-set-if-variable-is-empty
+ifneq ($(strip $(PIP)),)
 	$(INSTALL) $(PIP) || true
+endif
+ifneq ($(strip$(PIP_DEV)),)
 	$(INSTALL_DEV) $(PIP_DEV) || true
+endif
+ifneq ($(strip$(PIP_ONLY)),)
 	$(RUN) pip install $(PIP_ONLY) || true
+endif
 
 ifeq ($(ENV),pipenv)
 		pipenv lock
@@ -186,8 +194,8 @@ pipenv-lock:
 ## conda-clean: Remove conda and start all over
 .PHONY: conda-clean
 conda-clean:
-	conda update --all
 	$(INIT) && conda activate base
+	$(UPDATE)
 	conda env remove -n $(name) || true
 	conda clean -afy
 

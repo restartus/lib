@@ -117,9 +117,8 @@ install: $(INSTALL_REQ)
 ifeq ($(ENV),conda)
 	conda env list | grep ^$(name) || conda create -y --name $(name)
 	$(ACTIVATE)
-	# not clear if we need conda-forge
-	# conda config --env --add channels conda-forge
-	# conda config --env --set channel_priority strict
+	conda config --env --add channels conda-forge
+	conda config --env --set channel_priority strict
 	conda install --name $(name) -y python=$(PYTHON)
 	[[ -r environment.yml ]] && conda env update --name $(name) -y -f environment.yml || true
 endif

@@ -20,7 +20,7 @@ exclude := -not \( -path "./extern/*" -o -path "./.git/" \)
 all_py := $$(find restart -name "*.py" $(exclude) )
 all_yaml := $$(find restart -name "*.yaml" $(exclude))
 # gitpod needs three digits
-PYTHON ?= 3.8
+PYTHON ?= 3.r
 DOC ?= doc
 LIB ?= lib
 name ?= $$(basename $(PWD))
@@ -36,13 +36,13 @@ PIPENV_CHECK_FLAGS ?= --ignore 38212
 # The virtual environment [ pipenv | conda | none ]
 ENV ?= pipenv
 RUN ?=
+INIT ?=
 ACTIVATE ?=
 UPDATE ?=
 INSTALL ?=
 DEV_INSTALL ?= $(INSTALL)
 ifeq ($(ENV),pipenv)
 	RUN := pipenv run
-	ACTIVATE :=
 	UPDATE := pipenv update
 	INSTALL := pipenv install
 	INSTALL_DEV := $(INSTALL) --dev --pre
@@ -50,7 +50,8 @@ ifeq ($(ENV),pipenv)
 	INSTALL_REQ = pipenv-python
 else ifeq ($(ENV),conda)
 	RUN := conda run -n $(name)
-	ACTIVATE := eval "$$(conda shell.bash hook)" && conda activate $(name)
+	INIT := eval "$$(conda shell.bash hook)"
+	ACTIVATE := $(INIT) && conda activate $(name)
 	UPDATE := $(RUN) conda update --all
 	INSTALL := conda install -y -n $(name)
 	INSTALL_DEV := $(INSTALL)
@@ -119,7 +120,7 @@ ifeq ($(ENV),conda)
 		conda config --env --add channels conda-forge
 		conda config --env --set channel_priority strict
 		conda install --name $(name) -y python=$(PYTHON)
-		conda env update --name $(name) -f environment.yml
+		[[ -r environment.yml ]] && conda env update --name $(name) -f environment.yml
 endif
 	$(INSTALL) $(PIP) || true
 	$(INSTALL_DEV) $(PIP_DEV) || true
@@ -185,7 +186,8 @@ pipenv-lock:
 ## conda-clean: Remove conda and start all over
 .PHONY: conda-clean
 conda-clean:
-	$(ACTIVATE) && conda activate base
+	conda update --all
+	$(INIT) && conda activate base
 	conda env remove -n $(name) || true
 	conda clean -afy
 

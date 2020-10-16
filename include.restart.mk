@@ -1,5 +1,5 @@
-## loading restart variables
-PYTHON=3.9
+## loading restart variables note that 3.9 is incompatible to h5py and tables
+PYTHON=3.8
 PACKAGES+=make vim gosu
 PIP+=pandas confuse ipysheet pyomo h5py restart_datasets airflow
 		   # pyyaml xlrd

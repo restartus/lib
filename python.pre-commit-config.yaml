@@ -30,7 +30,7 @@ repos:
     hooks:
       - id: mypy
   - repo: https://github.com/pycqa/flake8
-    rev: 3.9
+    rev: 3.8
     hooks:
       - id: flake8
   - repo: https://github.com/pycqa/pydocstyle

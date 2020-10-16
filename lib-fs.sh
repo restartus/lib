@@ -16,7 +16,7 @@
 dropbox_find() {
     if [[ ! -e $HOME/Dropbox ]]
     then
-        log_verbose first look for personal then other enterprise dropbox folders
+        log_verbose "first look for personal then other enterprise dropbox folders"
         for dropbox in "$HOME/Dropbox (Personal)" "$HOME/Dropbox "*
         do
             if [[ -e $dropbox ]]
@@ -33,60 +33,60 @@ dropbox_find() {
 
 # is_ssd [disks] returns 0 if they are all ssds otherwise the number of non-SSDs
 disk_is_ssd()  {
-    if [[ $# < 1 ]]; then return 1; fi
+    if [[ $# -lt 1 ]]; then return 1; fi
     if [[ $OSTYPE =~ darwin ]]; then return; fi
     error=0
-    for disk in $@
+    local rotational
+    for disk in "$@"
     do
         # use readlink to get the true /dev/sd name
         disk="$(readlink -f "$disk")"
         # if the disk doesn't exist then say it is not an ssd
-        local rotational="/sys/block/$(basename "$disk")/queue/rotational"
+        rotational="/sys/block/$(basename "$disk")/queue/rotational"
         if [[ ! -e $rotational ]] ||  (( $(cat "$rotational") != 0 ))
         then
             ((++error))
         fi
     done
-    return $error
+    return "$error"
 }
 
 # usage: disk_size [list of disks]
 # stdout: drive size
 disk_size() {
-    log_verbose disk_size got $@
-    for d in $@
+    log_verbose "disk_size got $*"
+    for d in "$@"
     do
         # make sure it is valid and onliy see the main drive
         # Need eval because this comes in with quotes
-        if ! eval lsblk --nodeps $d >/dev/null 2>&1
+        if ! eval lsblk --nodeps "$d" >/dev/null 2>&1
         then
             continue
         fi
 	# Note you need -e to allow spaces and -n to prevent newline
         echo -en "$d "
         # Sort it do not use --scsi since for ata drives no size is output
-        eval lsblk --nodeps --output size --noheadings $d
+        eval lsblk --nodeps --output size --noheadings "$d"
     done
 }
 
 # sort the disks by biggest first this maximizes the free space
 # REturns the list of driver
 disk_sort() {
-   log_verbose disk_sort got $@
-   log_verbose echo disk_size returned $(disk_size $@)
+   log_verbose "disk_sort got $*"
+   log_verbose "disk_size returned $(disk_size "$@")"
 
-    disk_size $@ | sort -k2,2 -r | cut -d ' ' -f 1
+    disk_size "$@" | sort -k2,2 -r | cut -d ' ' -f 1
 }
 
 # Given a list of disks, uses the number and returns the configuration type
 # So it is ready for sroting
 zfs_disk_configuration() {
 
-    log_verbose zfs_disk count $# and arguments are $@
+    log_verbose "zfs_disk count $# and arguments are $*"
     if (( $# == 1 ))
     then
-
-        echo $1
+        echo "$1"
         return
     fi
 
@@ -100,29 +100,31 @@ zfs_disk_configuration() {
     #    sort -k2,2 -r | cut -d ' ' -f 1))
 
     # sort the disks by biggest first this maximizes the free space
-    log_verbose disks are $@
-    local disks="$(disk_sort $@)"
-    log_verbose disk_sort returned $disks
+    log_verbose "disks are $*"
+    local disks
+    disks="$(disk_sort "$@")"
+    log_verbose "disk_sort returned $disks"
     # note bash cannot parse disks=($(disk_sort $@)) into an array so do in two pieces
-    disks=($disks)
+    # https://github.com/koalaman/shellcheck/wiki/SC2206
+    IFS=" " read -r -a disks <<< "$disks"
     local count=${#disks[@]}
     # keep pushing out mirrors from large3st to smallest disks
-    log_verbose disk count $count for ${disks[@]}
+    log_verbose "disk count $count for ${disks[*]}"
     while (( count > 1 ))
     do
-	log_verbose count is $count
+	log_verbose "count is $count"
              # -n mean no newline and -e means keep spaces
              echo -ne "mirror ${disks[0]} ${disks[1]} "
              # Use array operation to remove first two elements
              # http://tldp.org/LDP/abs/html/arrays.html
-             disks=(${disks[@]:2})
+             IFS=" " read -r -a disks <<< "${disks[@]:2}"
              count=$((count-2))
     done
     # push out last disk as a spare
     if (( count == 1 ))
     then
          # $disks is same as ${disks[0]}
-         echo -ne "spare $disks"
+         echo -ne "spare ${disks[*]}"
     fi
     return
 
@@ -177,14 +179,15 @@ zfs_list() {
 
 # given list of disks see if they are already mounted
 disks_not_mounted() {
-    local mounts=$(mount)
+    local mounts
+    mounts=$(mount)
     if (( $# < 1 ))
     then
         echo -n 0
         return 0
     fi
     local already_mounted=0
-    for disk in $@
+    for disk in "$@"
     do
         if [[ $mounts =~ $disk ]]
         then
@@ -192,24 +195,25 @@ disks_not_mounted() {
             ((++already_mounted))
         fi
     done
-    echo -n $already_mounted
-    return $already_mounted
+    echo -n "$already_mounted"
+    return "$already_mounted"
 }
 
 # usage: disks_list_possible
 # looks for drives that are available and not being used by zfs
 # non standard use of return, this tells you how many drives were found
 disks_list_possible() {
+    local disks
     if [[ $OSTYPE =~ darwin ]]
     then
-        local disks="$(find /dev -name "disk?" 2>/dev/null)"
+        disks="$(find /dev -name "disk?" 2>/dev/null)"
     elif in_vmware_fusion && command -v lsblk >/dev/null
     then
         # fusion only puts the CDROM into /dev/disk/by-id so use regular names
         # in fusion although we can list by-uuid, zfs refuses to mount htme.
-        local disks=$( find /dev/disk/by-uuid -mindepth 1 )
+        disks=$( find /dev/disk/by-uuid -mindepth 1 )
         # so use lsblk to find drives and then sed to add /dev to their names
-        local disks=$( lsblk --raw --noheadings --nodeps --exclude 1,11 | cut -f1 -d' ' | sed 's$^$/dev/$' )
+        disks=$( lsblk --raw --noheadings --nodeps --exclude 1,11 | cut -f1 -d' ' | sed 's$^$/dev/$' )
         # This is a uuid for vmware also supports this and should be more
         # portable
     elif [[ -d /dev/disk/by-id ]]
@@ -221,14 +225,15 @@ disks_list_possible() {
 	# -part  removes partitions of disk
 	# http://www.atmel.com/products/memories/serial/mac-eui-serial-number.aspx
 	# nvme-ieu which point to the underlying disks which is another unique identifier
-        local disks="$(find /dev/disk/by-id  -mindepth 1 | grep -v -e "-part[0-9$]" -e wwn- -e lvm- -e nvme-eui\. )"
+        disks="$(find /dev/disk/by-id  -mindepth 1 | grep -v -e "-part[0-9$]" -e wwn- -e lvm- -e nvme-eui\. )"
     fi
 
+	local real_disk
     for disk in $disks
     do
 	# if this is a symlink then get the actual real disk name
 	# convert to /dev/sd? usually
-	local real_disk="$(readlink -f "$disk")"
+    real_disk="$(readlink -f "$disk")"
         # note this file runs early so do only depend on bash 3.2 features no |&
         # first see if the disk is mounted
         if mount 2>&1 | grep -q "^$real_disk"

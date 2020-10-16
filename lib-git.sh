@@ -19,7 +19,7 @@ git_organization() {
     # first get the front half
     dir="$PWD"
     # if there is an argument use it
-    if [[ $# > 1 ]]
+    if [[ $# -gt 1 ]]
     then
       dir="$1"
     fi
@@ -29,7 +29,10 @@ git_organization() {
       return
     fi
 
-    pushd "$dir" >/dev/null
+    if ! pushd "$dir" >/dev/null
+    then
+        return 1
+    fi
     org="$(git remote get-url origin)"
     # expect a string like http://github.com/org/repo or
     # git@github.com:org/repo
@@ -41,9 +44,12 @@ git_organization() {
     org="${org##*[:/]}"
     # consume everything up the last colon or slash you find
     export org="${org#$*[:/]}"
-    popd >/dev/null
+    if !  popd >/dev/null
+    then
+        return 2
+    fi
 
-    echo $org
+    echo "$org"
 }
 
 ## git_set_ssh repo switch the remote pull to ssh from https
@@ -52,20 +58,27 @@ git_organization() {
 git_set_ssh(){
     local repo=${1:-"$src"}
     local git_dir=${2:-"$WS_DIR/git"}
-    cd "$git_dir/$repo"
-    if ! git status
+    if ! cd "$git_dir/$repo"
     then
-        >&2 echo $FUNCNAME: $repo is not a git repo
         return 1
     fi
-    local url=$(git remote -v | grep -m1 '^origin' | sed -Ene's#.*(https://[^[:space:]]*).*#\1#p')
+    if ! git status
+    then
+        >&2 echo "${FUNCNAME[*]}: ${repo[*]} is not a git repo"
+        return 1
+    fi
+    local url
+    url=$(git remote -v | grep -m1 '^origin' | sed -Ene's#.*(https://[^[:space:]]*).*#\1#p')
     if [[ -z $url ]]
     then
-        log_verbose $repo already uses ssh
+        log_verbose "$repo already uses ssh"
         return 0
     fi
     git remote set-url origin "git@github.com:${url#https://github.com/}"
-    cd -
+    if ! cd -
+    then
+        return 2
+    fi
 
 }
 
@@ -93,7 +106,7 @@ git_install_or_update() {
 
     if (( $# < 1 ))
     then
-        >&2 echo $FUNCNAME: missing repo to update
+        >&2 echo "${FUNCNAME[*]}: missing repo to update"
         return_code=1
     fi
 
@@ -128,12 +141,15 @@ git_install_or_update() {
 
     if cd "$git_dir/$repo" 2>/dev/null
     then
-        if ! eval $git_command
+        if ! eval "$git_command"
         then
-            >&2 echo $FUNCNAME: in $repo, $git_command failed
+            >&2 echo "${FUNCNAME[*]}: in $repo, $git_command failed"
 	    return_code=2
         fi
-	cd -
+	if ! cd -
+    then
+        return 3
+    fi
     elif cd "$git_dir"
     then
         if [[ ! $full_repo_name =~ ^https ]]
@@ -143,12 +159,15 @@ git_install_or_update() {
 
     	if ! git clone "$full_repo_name" "$repo"
         then
-            >&2 echo $FUNCNAME: git clone "$full_repo_name" failed
+            >&2 echo "${FUNCNAME[*]}: git clone $full_repo_name failed"
             return_code=3
         fi
-        cd -
+        if ! cd -
+        then
+            return 4
+        fi
     else
-        >&2 echo $FUNCNAME: no $git_dir found
+        >&2 echo "${FUNCNAME[*]}: no $git_dir found"
         return_code=4
     fi
 

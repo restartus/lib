@@ -134,10 +134,18 @@ ifneq ($(strip$(PIP_ONLY)),)
 endif
 
 ifeq ($(ENV),pipenv)
-		pipenv lock
-		pipenv update
+	pipenv lock
+	pipenv update
 endif
 
+## export: export configuration to requirements.txt or environment.yml 
+.PHONY: export
+export:
+ifeq ($(ENV), conda)
+	$(ACTIVATE) && conda env export > environment.yml
+else ifeq($(ENV), pipenv)
+	$(RUN) pip freeze > requirements.txt
+endif
 
 # https://medium.com/@Tankado95/how-to-generate-a-documentation-for-python-code-using-pdoc-60f681d14d6e
 # https://medium.com/@peterkong/comparison-of-python-documentation-generators-660203ca3804

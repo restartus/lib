@@ -143,7 +143,7 @@ endif
 export:
 ifeq ($(ENV), conda)
 	$(ACTIVATE) && conda env export > environment.yml
-else ifeq($(ENV), pipenv)
+else ifeq ($(ENV), pipenv)
 	$(RUN) pip freeze > requirements.txt
 endif
 

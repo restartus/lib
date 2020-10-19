@@ -28,6 +28,10 @@ tag:
 	git tag -a "$(TAG)" -m "$(COMMENT)" && \
 	git push origin "$(TAG)"
 
+## toc: generate table of contents for markdowns in $CWD (see https://github.com/thlorenz/doctoc)
+.PHONY: toc
+toc:
+	doctoc .
 
 ## pre-commit: Run pre-commit hooks
 .PHONY: pre-commit

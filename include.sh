@@ -17,7 +17,7 @@
 # https://stackoverflow.com/questions/9901210/bash-source0-equivalent-in-zsh#23259585
 # this should be compatible with bash or zsh, it fails when BASH_SOURCE does not
 # exist
-lib_name="$(basename ${BASH_SOURCE:-${(%):-%N}})"
+lib_name="$(basename "${BASH_SOURCE:-"${(%):-%N}"}")"
 lib_name="${lib_name%.*}"
 # dashes are not allowed in bash variable names so make them underscores
 lib_name=${lib_name//-/_}
@@ -27,13 +27,14 @@ lib_name=${lib_name//-/_}
 # note how we use the escaped $ to get the reference
 # This does not work as a bash
 # if [[ ! -z $BASH &&  -z ${!lib_name} ]]
-if eval [[ -z \${$lib_name-} ]]
+if eval [[ -z "\${$lib_name-}" ]]
 then
-    eval $lib_name=true
+    eval "$lib_name=true"
 
     find_ws()
     {
         local dir=${1:-$SCRIPT_DIR}
+        # shellcheck disable=SC2016,SC1004
         local find_cmd='$(find "$dir" -maxdepth 2 \
             -name mnt -prune -o -name git -print -quit 2>/dev/null)'
         local found
@@ -41,7 +42,7 @@ then
             # do not go into mnt
             eval found="$find_cmd"
             if [[ -n $found ]]; then
-                echo $(dirname "$found")
+                dirname "$found"
             return 0; fi
             if [[ $dir = / ]]; then break; fi
             dir=$(dirname "$dir")
@@ -52,7 +53,7 @@ then
         # if no ws, then create one
         if [[ -z $dir ]]; then mkdir -p "${dir:=$HOME/ws/git}"; fi
         eval dir="$find_cmd"
-        echo $dir
+        echo "$dir"
     }
 
     # now call find_ws to figure out the workspace
@@ -73,10 +74,12 @@ then
             # exclude mnt so we do not disaoppear into sshfs mounts
             # maxdepth needs to be high enough for ws/git/user to find
             # ws/git/src/infra/lib
-            local lib=$(find "$WS_DIR" "$SCRIPT_DIR"/{.,..,../..,../../..} -maxdepth 7 \
-                -name mnt -prune -o -name $1 -print -quit)
+            local lib
+            lib="$(find "$WS_DIR" "$SCRIPT_DIR"/{.,..,../..,../../..} -maxdepth 7 \
+                -name mnt -prune -o -name "$1" -print -quit)"
             if [[ -n $lib ]]
             then
+            # shellcheck disable=SC1090
             source "$lib"; fi
         shift; done
     }

@@ -40,7 +40,7 @@ INIT ?=
 ACTIVATE ?=
 UPDATE ?=
 INSTALL ?=
-DEV_INSTALL ?= $(INSTALL)
+INSTALL_DEV ?= $(INSTALL)
 ifeq ($(ENV),pipenv)
 	RUN := pipenv run
 	UPDATE := pipenv update
@@ -114,6 +114,9 @@ vi:
 
 .PHONY: install
 install: $(INSTALL_REQ)
+	@echo PIP=$(PIP)
+	@echo PIP_ONLY=$(PIP_ONLY)
+	@echo PIP_DEV=$(PIP_DEV)
 ifeq ($(ENV),conda)
 	conda env list | grep ^$(name) || conda create -y --name $(name)
 	$(ACTIVATE)
@@ -126,10 +129,10 @@ endif
 ifneq ($(strip $(PIP)),)
 	$(INSTALL) $(PIP) || true
 endif
-ifneq ($(strip$(PIP_DEV)),)
+ifneq ($(strip $(PIP_DEV)),)
 	$(INSTALL_DEV) $(PIP_DEV) || true
 endif
-ifneq ($(strip$(PIP_ONLY)),)
+ifneq ($(strip $(PIP_ONLY)),)
 	$(RUN) pip install $(PIP_ONLY) || true
 endif
 

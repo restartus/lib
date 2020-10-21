@@ -16,7 +16,7 @@ SHELL ?= /bin/bash
 # https://www.theunixschool.com/2012/07/find-command-15-examples-to-exclude.html
 # exclude := -type d \( -name extern -o -name .git \) -prune -o
 # https://stackoverflow.com/questions/4210042/how-to-exclude-a-directory-in-find-command
-exclude := -not \( -path "./extern/*" -o -path "./.git/" \)
+exclude := -not \( -path "./extern/*" -o -path "./.git/*" \)
 all_py := $$(find restart -name "*.py" $(exclude) )
 all_yaml := $$(find restart -name "*.yaml" $(exclude))
 # gitpod needs three digits

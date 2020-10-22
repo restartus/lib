@@ -20,7 +20,7 @@ exclude := -not \( -path "./extern/*" -o -path "./.git/*" \)
 all_py := $$(find restart -name "*.py" $(exclude) )
 all_yaml := $$(find restart -name "*.yaml" $(exclude))
 # gitpod needs three digits
-PYTHON ?= 3.r
+PYTHON ?= 3.8
 DOC ?= doc
 LIB ?= lib
 name ?= $$(basename $(PWD))
@@ -31,6 +31,7 @@ ED_DIR ?= .
 # As of September 2020, run jupyter 0.2 and this generates a pipenv error
 # so ignore it
 PIPENV_CHECK_FLAGS ?= --ignore 38212
+PIP_DEV ?= pre-commit
 
 # https://stackoverflow.com/questions/589276/how-can-i-use-bash-syntax-in-makefile-targets
 # The virtual environment [ pipenv | conda | none ]

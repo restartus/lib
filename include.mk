@@ -40,7 +40,7 @@ pre-commit:
 	[[ -e .pre-commit-config.yaml ]] && $(RUN) pre-commit run --all-files || true
 	@echo this does not work on WSL so you need to run pre-commit install manually
 
-## repo-init: installs for a new repo
+## repo-init: installs for a new repo and sets up git pre-commit
 .PHONY: repo-init
 repo-init:
 	git lfs install

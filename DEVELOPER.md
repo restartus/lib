@@ -4,64 +4,63 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
 
-- [Table of Contents](#table-of-contents)
-  - [Directory Layout](#directory-layout)
+- [Directory Layout](#directory-layout)
 - [Guide For Developers Looking to Start Contributing to This Project](#guide-for-developers-looking-to-start-contributing-to-this-project)
-  - [Gitpod Workspace](#gitpod-workspace)
-    - [Set Up You're First Workspace](#set-up-youre-first-workspace)
-    - [Guide to Development with Gitpod](#guide-to-development-with-gitpod)
-      - [Workspace Start and Stop Functionality](#workspace-start-and-stop-functionality)
-      - [Creating a Workspace from a Specific Branch](#creating-a-workspace-from-a-specific-branch)
-      - [Multiple Workspaces](#multiple-workspaces)
-      - [Git commands](#git-commands)
-      - [Accessing Submodules](#accessing-submodules)
-      - [Adding Dependencies and the .gitpod.Dockerfile](#adding-dependencies-and-the-gitpoddockerfile)
-      - [Running Jupyter Notebook in a Workspace](#running-jupyter-notebook-in-a-workspace)
-  - [Prerequisites](#prerequisites)
-    - [Install Homebrew](#install-homebrew)
-    - [Install Python](#install-python)
-    - [Install Pipenv](#install-pipenv)
-    - [Install GitHub CLI](#install-github-cli)
-  - [Using Windows](#using-windows)
-    - [Installing WSL](#installing-wsl)
-    - [Using WSL](#using-wsl)
-  - [Cloning This Repo](#cloning-this-repo)
-    - [Long Guide](#long-guide)
-      - [Verifying Your Directory Structure is Compatible](#verifying-your-directory-structure-is-compatible)
-      - [Guide for Working on Multiple Projects](#guide-for-working-on-multiple-projects)
-  - [Short Guide for working with submodules](#short-guide-for-working-with-submodules)
-    - [Short Guide](#short-guide)
-  - [Git Submodules](#git-submodules)
-    - [Accessing and Contributing to Submodules](#accessing-and-contributing-to-submodules)
-    - [New Submodules Added to Master](#new-submodules-added-to-master)
-    - [The Data Submodule](#the-data-submodule)
-    - [Updates to Submodules](#updates-to-submodules)
-  - [Configuring Development Environment](#configuring-development-environment)
-  - [Feature Development, Rebasing, and Pull Requests](#feature-development-rebasing-and-pull-requests)
-    - [Adding New Features](#adding-new-features)
-    - [Pushing Commits to the Remote Repository](#pushing-commits-to-the-remote-repository)
-    - [Submitting Pull Requests to Merge Changes into the Master Branch](#submitting-pull-requests-to-merge-changes-into-the-master-branch)
-    - [Submitting Pull Requests to Merge Changes into the Master Branch](#submitting-pull-requests-to-merge-changes-into-the-master-branch-1)
-      - [Reviewing Pull Requests as a Maintainer](#reviewing-pull-requests-as-a-maintainer)
-      - [Merging Pull Requests as a Maintainer](#merging-pull-requests-as-a-maintainer)
-  - [Overview of Git Operations](#overview-of-git-operations)
-    - [Merging (Don't Do This)](#merging-dont-do-this)
-    - [Rebasing](#rebasing)
-    - [Squashing](#squashing)
-    - [Putting Everything Together](#putting-everything-together)
-    - [What To Do When You Check in Files You Didn't Mean To](#what-to-do-when-you-check-in-files-you-didnt-mean-to)
-    - [Viewing Commit History through Terminal](#viewing-commit-history-through-terminal)
+- [Gitpod Workspace](#gitpod-workspace)
+  - [Set Up You're First Workspace](#set-up-youre-first-workspace)
+  - [Guide to Development with Gitpod](#guide-to-development-with-gitpod)
+    - [Workspace Start and Stop Functionality](#workspace-start-and-stop-functionality)
+    - [Creating a Workspace from a Specific Branch](#creating-a-workspace-from-a-specific-branch)
+    - [Multiple Workspaces](#multiple-workspaces)
+    - [Git commands](#git-commands)
+    - [Accessing Submodules](#accessing-submodules)
+    - [Adding Dependencies and the .gitpod.Dockerfile](#adding-dependencies-and-the-gitpoddockerfile)
+    - [Running Jupyter Notebook in a Workspace](#running-jupyter-notebook-in-a-workspace)
+- [Prerequisites](#prerequisites)
+  - [Install Homebrew](#install-homebrew)
+  - [Install Python](#install-python)
+  - [Install Pipenv](#install-pipenv)
+  - [Install GitHub CLI](#install-github-cli)
+- [Using Windows](#using-windows)
+  - [Installing WSL](#installing-wsl)
+  - [Using WSL](#using-wsl)
+- [Cloning This Repo](#cloning-this-repo)
+  - [Long Guide](#long-guide)
+    - [Verifying Your Directory Structure is Compatible](#verifying-your-directory-structure-is-compatible)
+    - [Guide for Working on Multiple Projects](#guide-for-working-on-multiple-projects)
+- [Short Guide for working with submodules](#short-guide-for-working-with-submodules)
+  - [Short Guide](#short-guide)
+- [Git Submodules](#git-submodules)
+  - [Accessing and Contributing to Submodules](#accessing-and-contributing-to-submodules)
+  - [New Submodules Added to Master](#new-submodules-added-to-master)
+  - [The Data Submodule](#the-data-submodule)
+  - [Updates to Submodules](#updates-to-submodules)
+- [Configuring Development Environment](#configuring-development-environment)
+- [Feature Development, Rebasing, and Pull Requests](#feature-development-rebasing-and-pull-requests)
+  - [Adding New Features](#adding-new-features)
+  - [Pushing Commits to the Remote Repository](#pushing-commits-to-the-remote-repository)
+  - [Submitting Pull Requests to Merge Changes into the Master Branch](#submitting-pull-requests-to-merge-changes-into-the-master-branch)
+  - [Submitting Pull Requests to Merge Changes into the Master Branch next](#submitting-pull-requests-to-merge-changes-into-the-master-branch-next)
+    - [Reviewing Pull Requests as a Maintainer](#reviewing-pull-requests-as-a-maintainer)
+    - [Merging Pull Requests as a Maintainer](#merging-pull-requests-as-a-maintainer)
+- [Overview of Git Operations](#overview-of-git-operations)
+  - [Merging (Don't Do This)](#merging-dont-do-this)
+  - [Rebasing](#rebasing)
+  - [Squashing](#squashing)
+  - [Putting Everything Together](#putting-everything-together)
+  - [What To Do When You Check in Files You Didn't Mean To](#what-to-do-when-you-check-in-files-you-didnt-mean-to)
+  - [Viewing Commit History through Terminal](#viewing-commit-history-through-terminal)
 - [Development Practices and Tools We Use](#development-practices-and-tools-we-use)
   - [Project Tempo](#project-tempo)
     - [Weekly Sprint](#weekly-sprint)
-    - [Cadence](#cadence)
-    - [Daily Scrum](#daily-scrum)
-  - [Best Practices](#best-practices)
-  - [Environment Variables](#environment-variables)
-  - [Airflow](#airflow)
-  - [Project Planning](#project-planning)
-    - [Creating an Issue](#creating-an-issue)
-  - [Google Foo](#google-foo)
+  - [Cadence](#cadence)
+  - [Daily Scrum](#daily-scrum)
+- [Best Practices](#best-practices)
+- [Environment Variables](#environment-variables)
+- [Airflow](#airflow)
+- [Project Planning](#project-planning)
+  - [Creating an Issue](#creating-an-issue)
+- [Google Foo](#google-foo)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -83,11 +82,8 @@ important of these are [covid-projection](extern/covid-projection), which
 houses the source code for the Restart Partners model, and
 [data](extern/data), which houses all of the data that we use. More
 information on how we use Git submodules can be found [here](#git-submodules)
-
 - [lib](lib) Developer tools, Makefiles, and scripts for environment control.
-
 - [bin](bin). Mostly bash scripts for common, repetitive tasks that can be automated.
-
 - [user](user). Contains various experimental code.
 
 ## Guide For Developers Looking to Start Contributing to This Project
@@ -104,15 +100,16 @@ accessible through a Chrome browser tab.
 
 ### Set Up You're First Workspace
 
-- You'll only have to do these steps once :)
+You'll only have to do these steps once :)
 
-0. Make sure you have Google chrome installed, a Github account set up, and an
+1. Make sure you have Google chrome installed, a Github account set up, and an
    OpenSSH public/private rsa key pair (and make sure you know your
-   passphrase).
-   If you don't recall your passphrase, see [here](https://docs.github.com/en/github/authenticating-to-github/recovering-your-ssh-key-passphrase).
-1. Install the Gitpod chrome browser extension located [here](https://chrome.google.com/webstore/detail/gitpod-dev-environments-i/dodmmooeoklaejobgleioelladacbeki/related).
-2. Make a gitpod account through using your Github account [here](https://gitpod.io/login/).
-3. Navigate to [here](https://gitpod.io/settings/) and do the following:
+   passphrase).  If you don't recall your passphrase, see
+   [here](https://docs.github.com/en/github/authenticating-to-github/recovering-your-ssh-key-passphrase).
+2. Install the Gitpod chrome browser extension located
+   [here](https://chrome.google.com/webstore/detail/gitpod-dev-environments-i/dodmmooeoklaejobgleioelladacbeki/related).
+3. Make a gitpod account through using your Github account [here](https://gitpod.io/login/).
+4. Navigate to [here](https://gitpod.io/settings/) and do the following:
   a. Create an environment variable by clicking the add variable button.
   b. Name this variable `SSH_PUBLIC_KEY` and copy and paste your rsa public key
   in the value field.
@@ -120,16 +117,16 @@ accessible through a Chrome browser tab.
   d. Click the check box to confirm.
   e. Repeat steps a to d for the name `SSH_PRIVATE_KEY` but copy and paste only
   the portion of your rsa private key between the header and footer.  i.e. only
-  lines <key_line_i> in: that are beween the OPENSSH PRIVATE KEY lines. The
+  lines in: that are between the OPENSSH PRIVATE KEY lines. The
   reason for doing this is that Gitpod's textbox removes newline characters.
   Thus, in each start of a workspace, the key is parsed and reformatted to be
   in the expected OpenSSH format.
-4. Navigate in your browser to [restart/src](https://github.com/restartus/src).
-5. Click on the green Gitpod button that appears in between the Code button and
+5. Navigate in your browser to [restart/src](https://github.com/restartus/src).
+6. Click on the green Gitpod button that appears in between the Code button and
    About section toward the top right (refresh page if it is not present).
-6. Login with Github and authorize gitpod.
-7. Grant access and authorize once again if prompted.
-8. A new tab will open with Gitpod's Theia IDE. It will likely take ~1 min to
+7. Login with Github and authorize gitpod.
+8. Grant access and authorize once again if prompted.
+9. A new tab will open with Gitpod's Theia IDE. It will likely take ~1 min to
    build. Once it has finished, you should have a fully capable development
    environment set up!
 
@@ -818,24 +815,20 @@ things like poor code practice etc.
 context likely needed for the review process. The history of the PR and any
 comments that have been made will appear under the "Conversation" tab of the
 PR's github webpage.
-
 - Go through the PR's commits to see an overview of the changes that have
 been made. Make sure that there aren't too many commits/messages, and if
 there are, ask the issuer to do an interactive rebase to squash and fixup
 commits accordingly. Unsurprisingly, the PR's commits can be viewed under
 the "Commits" tab.
-
 - Next, ensure that lints and any other checks have succeeded/passed.
 This can be viewed under the "Checks" tab. Detailed breakdowns of a check
 can be viewed by simply clicking on it.
-
 - If all looks good so far, you must then review the file changes
 for any remaining deficiencies in code, design, etc. You can add comments
 to specific lines in files by hovering your mouse over the plus sign
 at the left of each line. These comments are how you can request the
 issuer to make any any changes that are necessary before merging the PR into
 master.
-
 - Finally, if everying checks out you can rebase and merge the PR's branch
 into master.
 

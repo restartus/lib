@@ -23,7 +23,7 @@ avahi_publish() {
 	local text="${5:-""}"
 
 	if [[ -e $service_file ]]; then
-		log_verbose $service_file already exists do not overwrite
+		log_verbose "$service_file already exists do not overwrite"
 		return
 	fi
 
@@ -89,5 +89,5 @@ avahi_publish_stop() {
 	local protocol="${2:-"_smb"}"
 	local port="${3:-445}"
 	local text="${4:-""}"
-	pkill avahi-public-service $name $protocol $port $text
+	pkill avahi-public-service "$name" "$protocol" "$port" "$text"
 }

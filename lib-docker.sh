@@ -10,8 +10,10 @@
 # This is for clusterlab swarms
 set_docker_consul_master() {
 	export SWARM_MASTER=${1:-${SWARM_MASTER:-"${USER}0"}}
-	local full_hostname=$(add_local "$SWARM_MASTER")
-	local swarm_master_ip=$(get_ip "$full_hostname")
+	local full_hostname
+	full_hostnaem="$(add_local "$SWARM_MASTER")"
+	local swarm_master_ip
+	swarm_master_ip="$(get_ip "$full_hostname")"
 	export DOCKER_HOST=${DOCKER_HOST:-"$swarm_master_ip:2378"}
 	log_verbose using swarm at DOCKER_HOST
 	log_verbose turn off TLS verify for raspbian as TLS is not compatible with hypriot
@@ -29,14 +31,15 @@ set_docker_consul_master() {
 # http://blog.hypriot.com/post/first-touch-down-with-docker-for-mac/
 # You just need to make sure /usr/bin/qemu-arm-static is in the container
 docker_architecture() {
-	local info=$(docker info)
+	local info
+	info="$(docker info)"
 	if [[ $info =~ "Architecture: x86_64" ]]; then
 		echo intel
-	elif [[ $info =~ "hypriot.arch=armv6" ]]; then
+	elif [[ $info =~ hypriot.arch=armv6 ]]; then
 		echo rpi1
-	elif [[ $info =~ "hypriot.arch=armv7l" ]]; then
+	elif [[ $info =~ hypriot.arch=armv7l ]]; then
 		echo rpi2
-	elif [[ $info =~ "hypriot.arch=armv8" ]]; then
+	elif [[ $info =~ hypriot.arch=armv8 ]]; then
 		echo rpi3
 	elif [[ $info =~ "Architecture: arm" ]]; then
 		echo rpi
@@ -65,7 +68,7 @@ docker_start() {
 		# start using docker-machine commands
 		if docker-machine active; then
 			host=$(docker-machine active)
-			docker-machine $host restart
+			docker-machine "$host" restart
 			return
 		fi
 
@@ -103,7 +106,7 @@ docker_start() {
 	if docker-machine ls | grep "$host.*generic"; then
 		# assume if not systemd using systemctl then it is upstart
 		# using service command
-		docker-machine ssh "$host" 'sudo $(command -v systemctl || command -v service) restart docker'
+		docker-machine ssh "$host" "sudo \$(command -v systemctl || command -v service) restart docker"
 		return $?
 	fi
 
@@ -137,7 +140,7 @@ use_docker_machine() {
 		if ! docker-machine status "$machine" | grep -q Running; then
 			docker-machine restart "$machine"
 		elif ! docker-machine active >/dev/null 2>&1; then
-			eval $(docker-machine env "$machine")
+			eval \$(docker-machine env "$machine")
 		fi
 	fi
 }

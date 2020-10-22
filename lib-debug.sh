@@ -22,7 +22,7 @@ lib_name=${lib_name//-/_}
 echo "in debug set $lib_name"
 if eval "[[ ! -v $lib_name ]]"; then
 	# how to do an indirect reference
-	echo running debug 
+	echo running debug
 	eval "$lib_name=true"
 
 	# Debug tools

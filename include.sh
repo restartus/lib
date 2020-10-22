@@ -29,7 +29,7 @@ lib_name=${lib_name//-/_}
 # if [[ ! -z $BASH &&  -z ${!lib_name} ]]
 if [[ ! -v "$lib_name" ]]
 then
-    echo eval "$lib_name=true"
+    eval "$lib_name=true"
 
     find_ws()
     {

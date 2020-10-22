@@ -462,8 +462,9 @@ if eval "[[ ! -v $lib_name ]]"; then
 			shift
 		done
 		for package in "$@"; do
-			# do not check flags
-			if is_package_installed "$flags" "$package"; then
+			# do not check flags so do not quote
+            #shellcheck ignore=SC2086
+			if is_package_installed $flags "$package"; then
 				continue
 			fi
 

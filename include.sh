@@ -27,9 +27,9 @@ lib_name=${lib_name//-/_}
 # note how we use the escaped $ to get the reference
 # This does not work as a bash
 # if [[ ! -z $BASH &&  -z ${!lib_name} ]]
-if eval [[ -z "\${$lib_name-}" ]]
+if [[ ! -v "$lib_name" ]]
 then
-    eval "$lib_name=true"
+    echo eval "$lib_name=true"
 
     find_ws()
     {

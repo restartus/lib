@@ -19,8 +19,10 @@ lib_name=${lib_name//-/_}
 #echo eval [[ -z \${$lib_name-} ]] returns
 #eval [[ -z \${$lib_name-} ]]
 #echo $?
-if eval [[ -z \$\{"$lib_name"-\} ]]; then
+echo "in debug set $lib_name"
+if eval "[[ ! -v $lib_name ]]"; then
 	# how to do an indirect reference
+	echo running debug 
 	eval "$lib_name=true"
 
 	# Debug tools

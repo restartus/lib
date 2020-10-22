@@ -11,7 +11,8 @@ lib_name=${lib_name//-/_}
 # This is how to create a pointer by reference in bash so
 # it checks for the existance of the variable named in $lib_name
 # not how we use the escaped $ to get the reference
-if eval "[[ -z \${$lib_name-} ]]"; then
+# as of bash 4.2 we can test directly
+if eval "[[ ! -v $lib_name ]]"; then
 	# how to do an indirect reference
 	eval "$lib_name=true"
 

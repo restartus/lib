@@ -18,7 +18,7 @@ lib_name=${lib_name//-/_}
 #echo eval [[ -z \${$lib_name-} ]] returns
 #eval [[ -z \${$lib_name-} ]]
 #echo $?
-if eval [[ -z \$\{"$lib_name"-\} ]]; then
+if eval "[[ ! -v $lib_name ]]"; then
 	# how to do an indirect reference
 	eval "$lib_name=true"
 

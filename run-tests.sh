@@ -7,7 +7,6 @@ cd "${SCRIPT_DIR}/../" || exit
 # then
 #   if ! pipenv run main.py --pop dict; then exit 1; fi
 # fi
-if ! make test
-then
-    exit 2
+if ! make test; then
+	exit 2
 fi

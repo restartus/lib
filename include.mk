@@ -6,8 +6,11 @@ TAG ?= v1
 # https://www.gnu.org/software/make/manual/make.html#Flavors
 # Use simple expansion for most
 SHELL ?= /bin/bash
-repo ?= restartus
+GIT_ORG ?= restartus
 name ?= $$(basename "$(PWD)")
+# if you have include.python installed then it uses the environment but by
+# default we assume we are using the raw environment
+RUN ?=
 
 .DEFAULT_GOAL := help
 .PHONY: help
@@ -36,17 +39,26 @@ readme:
 ## pre-commit: Run pre-commit hooks
 .PHONY: pre-commit
 pre-commit:
+	@echo this does not work on WSL so you need to run pre-commit install manually
 	[[ -e .pre-commit-config.yaml ]] && $(RUN) pre-commit autoupdate || true
 	[[ -e .pre-commit-config.yaml ]] && $(RUN) pre-commit run --all-files || true
-	@echo this does not work on WSL so you need to run pre-commit install manually
 
-## repo-init: installs for a new repo and sets up git pre-commit
-.PHONY: repo-init
-repo-init:
-	git lfs install
-	git lfs pull
+## pre-commit-install: Install precommit
+.PHONY: pre-commit-install
+pre-commit-install:
 	[[ -e .pre-commit-config.yaml ]] && $(RUN) pre-commit install || true
 
+## git-lfs: installs git lfs
+.PHONY: git-lfs
+git-lfs:
+	$(RUN) git lfs install
+	$(RUN) git lfs pull
+
+## repo-install: creates a repo and sets up pre-commits and creates default submodules
+.PHONY: repo-install
+repo-install: git-lfs pre-commit-install
+	$(RUN) for repo in bin lib docker; do git submodule add git@github.com:$(GIT_ORG)/$$repo; done
+	$(RUN) git submodule update --init --recursive --remote
 
 ## gcloud: push up to Google Cloud
 .PHONY: gcloud

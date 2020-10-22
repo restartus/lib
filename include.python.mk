@@ -31,7 +31,17 @@ ED_DIR ?= .
 # As of September 2020, run jupyter 0.2 and this generates a pipenv error
 # so ignore it
 PIPENV_CHECK_FLAGS ?= --ignore 38212
-PIP_DEV ?= pre-commit
+PIP_DEV += \
+		 pre-commit \
+		 isort \
+		 seed-isort-config \
+		 yamllint \
+		 flake8 \
+		 mypy \
+		 bandit \
+		 black \
+		 pydocstyle \
+		 pdoc3 \
 
 # https://stackoverflow.com/questions/589276/how-can-i-use-bash-syntax-in-makefile-targets
 # The virtual environment [ pipenv | conda | none ]
@@ -65,7 +75,7 @@ else ifeq ($(ENV),none)
 	UPDATE := :
 	INSTALL :=
 	INSTALL_DEV :=
-	INSTALL_REQ := 
+	INSTALL_REQ :=
 endif
 
 
@@ -142,7 +152,7 @@ ifeq ($(ENV),pipenv)
 	pipenv update
 endif
 
-## export: export configuration to requirements.txt or environment.yml 
+## export: export configuration to requirements.txt or environment.yml
 .PHONY: export
 export:
 ifeq ($(ENV), conda)
@@ -215,13 +225,14 @@ conda-clean:
 conda:
 	$(ACTIVATE) && conda activate $(name)
 
+# Note we are using setup.cfg for all the mypy and flake excludes and config
 ## lint : code check (conda)
 .PHONY: lint
 lint:
 	$(RUN) flake8 || true
 ifdef all_py
 	$(RUN) seed-isort-config ||true
-	$(RUN) mypy --namespace-packages $(all_py) || true
+	$(RUN) mypy || true
 	$(RUN) bandit $(all_py) || true
 	$(RUN) pydocstyle --convention=google $(all_py) || true
 endif

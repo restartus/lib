@@ -10,6 +10,15 @@ include.python.mk is for python development
 include.airflow.mk for using Apache airflow
 include.docker.mk for docker managemen
 
+## Using repo installation
+
+If you want to create a new repo then you need to:
+
+- link to [setup.cfg](setup.cfg)
+- create a Makefile that refers to at least [include.mk](include.mk)
+- the run `make repo-init` which will also add helper repos like bin, lib and
+    docker
+
 ## Installation
 
 This library is used by the parallel richtong/bin repo and you should put them

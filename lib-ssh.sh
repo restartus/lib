@@ -28,11 +28,11 @@ ssh_install_dir() {
 		# For Mac compatibility do not use the -- options
 		sudo install -C -b -m 600 -o "$user" -g "$group" "$src"/{authorized_keys,config,*.pub,known_hosts,*.fingerprint} "$dest"
 		# Now link the secrets in so that they work only if the src is open
-		cd "$src"
+		cd "$src" || true
 		for secret in aws-access-key* *.pem *.id_rsa *.id_ed25519 *.json; do
 			# if we do not wild card match look for a real asterisk in the name
 			if [[ $secret =~ ^"*." ]]; then
-				log_verbose no $secret found
+				log_verbose "no $secret found"
 				continue
 			fi
 			# If there is no match, then the for in returns the wild card
@@ -42,7 +42,7 @@ ssh_install_dir() {
 				ln -s "$src/$secret" "$dest"
 			fi
 		done
-		cd -
+		cd - || true
 	fi
 
 	# for security make sure all of destination has correct permissions
@@ -83,7 +83,7 @@ use_openssh_keychain() {
 	# https://wiki.archlinux.org/index.php/GNOME_Keyring
 	if ! grep -q "^X-GNOME-Autostart-enabled=false" /etc/xdg/autostart/gnome-keyring-ssh.desktop; then
 		sudo tee -a /etc/xdg/autostart/gnome-keyring-ssh.desktop <<<'X-GNOME-Autostart-enabled=false'
-		echo $SCRIPTNAME: To get rid of gnome-keyring ssh-agent a logout required
+		echo "$SCRIPTNAME: To get rid of gnome-keyring ssh-agent a logout required"
 	fi
 	# This is the "correct" way, but doesn't seem to work for 14.04
 	# http://ubuntuforums.org/showthread.php?t=2250516
@@ -112,10 +112,10 @@ ssh_move_and_link() {
 	local private_dir=${2:-"$HOME/Private"}
 	shift 2
 	local target_dirs
-	if [[ -z $@ ]]; then
+	if [[ -z $* ]]; then
 		target_dirs="ssh aws"
 	else
-		target_dirs="$@"
+		target_dirs="$*"
 	fi
 	for dir in $target_dirs; do
 		source_dir="$home_dir/.$dir"
@@ -128,7 +128,9 @@ ssh_move_and_link() {
 		log_verbose "copy from source_dir=$source_dir dest_dir=$dest_dir"
 		# handle .ssh as a special case
 		if [[ $dir == ssh ]]; then
-			pushd "$source_dir" >/dev/null
+			if ! pushd "$source_dir" >/dev/null; then
+				return 1
+			fi
 			log_verbose "$dir handled specially only move private keys"
 			for key in *{id_rsa,id_ed25519} aws-*-key; do
 				# do not move if we have already symlinked
@@ -137,7 +139,7 @@ ssh_move_and_link() {
 					ln -srb "$dest_dir/$key" .
 				fi
 			done
-			popd >/dev/null
+			popd >/dev/null || true
 			continue
 		fi
 
@@ -158,7 +160,7 @@ set_ssh_permissions() {
 
 # paramaters are the site and the private key to use for it
 add_site_to_ssh_config() {
-	if [[ $# < 2 ]]; then
+	if [[ $# -lt 2 ]]; then
 		return 1
 	fi
 	cat >>config <<-EOF

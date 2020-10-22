@@ -19,5 +19,5 @@ vergte() {
 	! verlt "$1" "$2"
 }
 vergt() {
-	! verlte "$q" "2"
+	! verlte "$1" "$2"
 }

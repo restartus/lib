@@ -8,7 +8,7 @@
 ## Note the if makes sure we only source once which is more efficient
 
 # create a variable that is just the filename without an extension
-lib_name="$(basename ${BASH_SOURCE%.*})"
+lib_name="$(basename "${BASH_SOURCE%.*}")"
 # dashes are not legal in bash names
 lib_name=${lib_name//-/_}
 #echo trying $lib_name
@@ -18,9 +18,9 @@ lib_name=${lib_name//-/_}
 #echo eval [[ -z \${$lib_name-} ]] returns
 #eval [[ -z \${$lib_name-} ]]
 #echo $?
-if eval [[ -z \${$lib_name-} ]]; then
+if eval [[ -z \$\{"$lib_name"-\} ]]; then
 	# how to do an indirect reference
-	eval $lib_name=true
+	eval "$lib_name=true"
 
 	# usage: util_sudo [-u user ] [files to be accessed]
 	# return the text "sudo" if any of the files are not writeable
@@ -52,13 +52,14 @@ if eval [[ -z \${$lib_name-} ]]; then
 		else
 			local flags="-c %G"
 		fi
-		stat $flags $@
+		# shellcheck disable=SC2086
+		stat $flags "$@"
 	}
 
 	# backup a file keep iterating until you find a free name
 	# usage: util_backup files..
 	util_backup() {
-		for file in $@; do
+		for file in "$@"; do
 			if [[ ! -e $file ]]; then
 				continue
 			fi
@@ -83,18 +84,21 @@ if eval [[ -z \${$lib_name-} ]]; then
 	# needed when updating paths and want to immediately use the new
 	# commands in the running script
 	source_profile() {
-		pushd ${1:-"$HOME"} >/dev/null
+		if ! pushd "${1:-"$HOME"}" >/dev/null; then
+			return 1
+		fi
 		for file in .profile .bash_profile .bashrc; do
 			if [[ -e "$file" ]]; then
 				# turn off undefined variable checking because
 				# scripts like bash completion reference undefined
 				# And ignore errors in profiles
 				set +u
+				# shellcheck disable=SC1090
 				source "$file" || true
 				set -u
 			fi
 		done
-		popd
+		popd || true
 		# rehash in case the path changes changes the execution order
 		hash -r
 	}
@@ -105,8 +109,8 @@ if eval [[ -z \${$lib_name-} ]]; then
 	dir_empty() {
 		if (($# == 0)); then return 0; fi
 		local dirs="$1"
-		count=$(ls -A $dirs | wc -l)
-		return $count
+		count="$(find . -name "$dirs" | wc -l)"
+		return "$count"
 	}
 
 	# takes the standard input and adds pretty spaces
@@ -115,7 +119,7 @@ if eval [[ -z \${$lib_name-} ]]; then
 	# https://unix.stackexchange.com/questions/148109/shifting-command-output-to-the-right
 	indent_output() {
 		local indent=${1:-8}
-		tr "[:blank:] " "\n" | nl -bn -w $indent
+		tr "[:blank:] " "\n" | nl -bn -w "$indent"
 	}
 
 	# usage: in_ssh returns 0 if in an ssh session
@@ -143,7 +147,7 @@ if eval [[ -z \${$lib_name-} ]]; then
 		# the ,, makes it lower case
 		if [[ ${response,,} =~ ^y ]]; then
 			# https://unix.stackexchange.com/questions/296838/whats-the-difference-between-eval-and-exec
-			eval $cmd
+			eval "$cmd"
 		fi
 	}
 
@@ -166,7 +170,8 @@ if eval [[ -z \${$lib_name-} ]]; then
 
 	service_start() {
 		local svc=${1:-docker}
-		local state=$(sudo service "$svc" status)
+		local state
+		state=$(sudo service "$svc" status)
 		case "$state" in
 		*running*)
 			# Try upstart first, if it fails try systemd
@@ -187,7 +192,7 @@ if eval [[ -z \${$lib_name-} ]]; then
 
 	linux_distribution() {
 		if [[ $(uname) =~ Linux ]]; then
-			echo $(lsb_release -i | awk '{print $3}' | tr '[:upper:]' '[:lower:]')
+			lsb_release -i | awk '{print $3}' | tr '[:upper:]' '[:lower:]'
 		fi
 	}
 
@@ -369,10 +374,10 @@ if eval [[ -z \${$lib_name-} ]]; then
 			# Note that 16 = Sierra, 15=El Capitan,...
 			# https://stackoverflow.com/questions/9913942/check-version-of-os-then-issue-a-command-if-the-correct-version
 			# But we use the user visible version
-			echo macos.$(sw_vers -productVersion)
+			echo "macos.$(sw_vers -productVersion)"
 			;;
 		linux*)
-			echo linux.$(linux_distribution).$(linux_version)
+			echo "linux.$(linux_distribution).$(linux_version)"
 			;;
 		*)
 			return 1
@@ -382,11 +387,11 @@ if eval [[ -z \${$lib_name-} ]]; then
 
 	# run a file if it exists
 	run_if() {
-		if [[ $# < 1 ]]; then
+		if (($# < 1)); then
 			return 1
 		fi
 		if [[ -r $1 ]]; then
-			"$SHELL" $@
+			"$SHELL" "$@"
 		fi
 	}
 

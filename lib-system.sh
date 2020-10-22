@@ -14,11 +14,13 @@ run_web_server() {
 }
 run_app_host() {
 	# Need to run wscons with /dev/null to get it to run in the backgroun
-	cd "$WS_DIR/git/src"
+	if ! cd "$WS_DIR/git/src"; then
+		return
+	fi
 	wvrun app-host </dev/null &
 	local app_host_pid=$!
 	log_verbose echo app-host started at $app_host_pid
-	cd -
+	cd - || true
 }
 kill_system() {
 	# note we cannot use && as pgrep returns an error if not found

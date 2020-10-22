@@ -15,7 +15,7 @@ xcode_license_accept() {
 
 # returns the mac release
 mac_version() {
-	echo $(sw_vers -productVersion)
+	sw_vers -productVersion
 }
 
 #  converst version to the code name used for things like install-macports.sh which needs names
@@ -100,7 +100,7 @@ find_in_volume() {
 	# http://askubuntu.com/questions/444551/get-absolute-path-of-files-using-find-command
 	# but readlink -f not availabe on Mac OS, so use feeding find an absolute path
 	# returns an absolute path trick
-	echo $(find "$path"* -name "$1" -print -quit 2>/dev/null)
+	find "$path"* -name "$1" -print -quit 2>/dev/null
 }
 
 # install_app application [location]
@@ -127,7 +127,7 @@ find_in_volume() {
 	# http://askubuntu.com/questions/444551/get-absolute-path-of-files-using-find-command
 	# but readlink -f not availabe on Mac OS, so use feeding find an absolute path
 	# returns an absolute path trick
-	echo $(find "$path"* -name "$1" -print -quit 2>/dev/null)
+	find "$path"* -name "$1" -print -quit 2>/dev/null
 }
 
 # Looks in /Volumes for the app, runs the command and then detaches
@@ -139,11 +139,12 @@ find_in_volume_open_then_detach() {
 	# Find the first volume that hass the app
 	# http://stackoverflow.com/questions/5720194/bash-argument-passing-to-child-or
 	# uses special behaviou or $@ in double quotes to keep arguments wrapped
-	local app=$(find_in_volume "$@")
+	local app
+	app=$(find_in_volume "$@")
 	if [[ -z $app ]]; then return 1; fi
 
 	open "$app"
-	read -p "Press any key when you are done installing $app "
+	read -r -p "Press any key when you are done installing $app "
 	hdiutil detach "$(dirname "$app")"
 }
 
@@ -152,7 +153,8 @@ find_in_volume_open_then_detach() {
 find_in_volume_copy_then_detach() {
 	if [[ ! $OSTYPE =~ darwin ]]; then return 0; fi
 	if (($# < 1)); then return 1; fi
-	local app=$(find_in_volume "$@")
+	local app
+	app=$(find_in_volume "$@")
 	if [[ -z $app ]]; then return 1; fi
 
 	if [[ ! -e /Applications/$(basename "$app") ]]; then

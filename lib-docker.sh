@@ -11,7 +11,7 @@
 set_docker_consul_master() {
 	export SWARM_MASTER=${1:-${SWARM_MASTER:-"${USER}0"}}
 	local full_hostname
-	full_hostnaem="$(add_local "$SWARM_MASTER")"
+	full_hostname="$(add_local "$SWARM_MASTER")"
 	local swarm_master_ip
 	swarm_master_ip="$(get_ip "$full_hostname")"
 	export DOCKER_HOST=${DOCKER_HOST:-"$swarm_master_ip:2378"}
@@ -140,7 +140,7 @@ use_docker_machine() {
 		if ! docker-machine status "$machine" | grep -q Running; then
 			docker-machine restart "$machine"
 		elif ! docker-machine active >/dev/null 2>&1; then
-			eval \$(docker-machine env "$machine")
+			eval "$(docker-machine env "$machine")"
 		fi
 	fi
 }
@@ -156,14 +156,14 @@ rm_docker_machine() {
 	else
 		force=""
 	fi
-	local machines=${@:-default}
+	local machines=${*:-default}
 	for machine in $machines; do
-		if docker-machine status "$machine" 2>&1 >/dev/null; then
+		if docker-machine status "$machine" >/dev/null 2>&1; then
 			if docker-machine status "$machine" 2>/dev/null | grep -q Running; then
 				# the stop will not work if it is a generic as we use for the rpi
 				docker-machine stop "$machine" || true
 			fi
-			docker-machine rm $force "$machine"
+			docker-machine rm "$force" "$machine"
 		fi
 	done
 }
@@ -179,7 +179,7 @@ rm_docker_machine() {
 docker_remove_container() {
 	# note this will not run on a Mac properly because docker is not found
 	# rm_docker_container localhost $@
-	for container in $@; do
+	for container in "$@"; do
 		if ! docker_find_container "$container"; then
 			# http://container-solutions.com/understanding-volumes-docker/
 			# -v means remove data volumes too
@@ -192,7 +192,7 @@ docker_remove_container() {
 docker_find_container() {
 	# local version does not run on a mac because docker is not visible via ssh
 	# ps_docker_container localhost $@
-	for container in $@; do
+	for container in "$@"; do
 		docker ps -a --filter name="$container" | grep -q "$container"
 	done
 }
@@ -206,7 +206,9 @@ ps_docker_container() {
 	if (($# < 2)); then return 1; fi
 	local remote="$1"
 	local container="$2"
-	ssh "$remote" ""$(declere -f docker_find_container)"; docker_find_container "$container""
+	# shellcheck disable=SC2029
+	ssh "$remote" "$(declare -f docker_find_container)"
+	docker_find_container "$container"
 }
 
 # usage: rm_docker_container remote machine container
@@ -216,35 +218,37 @@ rm_docker_container() {
 	if (($# < 2)); then return 1; fi
 	local remote="$1"
 	shift
-	for container in $@; do
+	for container in "$@"; do
 		log_verbose see if there was already a swarm process started if so stop
 		if ps_docker_container "$remote" "$container"; then
 			# swarm-agent present stop and rm on $remote
 			# switch to docker update --restart=unless-stopped when available on rpi
-			ssh "$remote" ""$(declare -f docker_remove_container)"; docker_remove_container "$container""
+			# shellcheck disable=SC2029
+			ssh "$remote" "$(declare -f docker_remove_container)"
+			docker_remove_container "$container"
 		fi
 	done
 }
 
 exec_output() {
-	if [[ $# < 1 ]]; then return; fi
+	if [[ $# -lt 1 ]]; then return; fi
 	if "$DOCKER_OUTPUT"; then
-		echo RUN $@
+		echo "RUN $*"
 	else
-		eval $@
+		eval "$@"
 	fi
 }
 
 package_output() {
-	if [[ $# < 1 ]]; then return; fi
+	if [[ $# -lt 1 ]]; then return; fi
 
 	# put each on a line and sort for uniqueness
 	if $DOCKER_OUTPUT; then
 		printf "RUN apt-get update && apt-get install -y"
-		printf ' \\\n    %s' $(echo $@ | xargs -n1 | sort -u)
+		printf ' \\\n    %s' "$(echo "$@" | xargs -n1 | sort -u)"
 		echo
 	else
-		sudo apt-get -y $NO_EXEC install $@
+		sudo apt-get -y "$NO_EXEC" install "$@"
 	fi
 }
 
@@ -257,15 +261,20 @@ docker_machine_create_swarm() {
 	local force="$2"
 	local discovery="$3"
 	shift 3
-	local flags="$@"
-	local ip=$(get_ip "$remote")
-	local user=$(get_user "$remote")
-	local host=$(get_host "$remote")
-	local machine=$(remove_local "$host")
+	local flags="$*"
+	local ip
+	ip="$(get_ip "$remote")"
+	local user
+	user="$(get_user "$remote")"
+	local host
+	host=$(get_host "$remote")
+	local machine
+	machine=$(remove_local "$host")
 
+	# shellcheck disable=SC2086
 	if ! docker_machine_create \
-		$remote \
-		$force \
+		"$remote" \
+		"$force" \
 		--swarm \
 		--swarm-discovery="$discovery" \
 		--swarm-image hypriot/rpi-swarm:latest \
@@ -286,40 +295,46 @@ docker_machine_create() {
 	local remote="$1"
 	local force="$2"
 	shift 2
-	local flags="$@"
-	local ip=$(get_ip "$remote")
-	local user=$(get_user "$remote")
-	local host=$(get_host "$remote")
-	local machine=$(remove_local "$host")
-	log_verbose creating hypriot swarm at ip $ip for host $host with user $user as machine $machine
+	local flags="$*"
+	local ip
+	ip=$(get_ip "$remote")
+	local user
+	user=$(get_user "$remote")
+	local host
+	host=$(get_host "$remote")
+	local machine
+	machine=$(remove_local "$host")
+	log_verbose "creating hypriot swarm at ip $ip for host $host with user $user as machine $machine"
 	if ! host_alive "$host"; then
-		log_warning could not find $host running on network skipping
+		log_warning "could not find $host running on network skipping"
 		return
 	fi
 	remove_from_authorized_hosts "$host"
 	if ! "$SCRIPT_DIR/is-rpi.sh" "$remote"; then
-		log_warning $remote is not a Raspberry Pi but will add to cluster anyway
+		log_warning "$remote is not a Raspberry Pi but will add to cluster anyway"
 	fi
-	log_verbose stop and remove the containers to prevent error in docker-machine create $machine
+	log_verbose "stop and remove the containers to prevent error in docker-machine create $machine"
 	rm_docker_container "$remote" swarm-agent
 	rm_docker_container "$remote" swarm-agent-master
-	log_verbose remove existing docker machine $machine if necessary
+	log_verbose "remove existing docker machine $machine if necessary"
 	if $force; then
 		local force_flag=-f
 	else
 		local force_flag=""
 	fi
-	rm_docker_machine $force_flag "$machine"
+	rm_docker_machine "$force_flag" "$machine"
 	if $force && ssh "$remote" [[ -e /etc/docker/daemon.json ]]; then
 		log_warning before hypriot version 0.5.15 daemon.json had to be removed
-		log_warning disabling /etc/docker/daemon.json on $remote not compatible with docker-machine
+		log_warning "disabling /etc/docker/daemon.json on $remote not compatible with docker-machine"
+		# shellcheck disable=SC2029
 		ssh "$remote" "sudo systemctl stop docker &&
                        sudo mv /etc/docker/daemon.json /etc/docker/daemon.$$.json &&
                        sudo systemctl start docker"
 	fi
 	log_verbose make sure docker is running on the machine
 	docker_start "$machine" "$remote"
-	log_verbose creating $machine
+	log_verbose "creating $machine"
+	# shellcheck disable=SC2086
 	if ! docker-machine create \
 		--driver generic \
 		--generic-ip-address="$ip" \
@@ -327,6 +342,7 @@ docker_machine_create() {
 		--engine-storage-driver=overlay \
 		$flags \
 		"$machine"; then
-		return !?
+
+		return $?
 	fi
 }

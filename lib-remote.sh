@@ -44,6 +44,8 @@ remote_run() {
 		s)
 			sudo=sudo
 			;;
+		*) ;;
+
 		esac
 	done
 	shift $((OPTIND - 1))
@@ -52,14 +54,17 @@ remote_run() {
 		return 2
 	fi
 	local remote="$1"
-	local script="$(readlink -f "$2")"
-	local surround_sh="$(dirname "$script")/surround.sh"
+	local script
+	script="$(readlink -f "$2")"
+	local include_sh
+	include_sh="$(dirname "$script")/include.sh"
 	local script_rel_to_wsdir=${script#$WS_DIR/}
 	local relative_ws_dir=${WS_DIR#$HOME/}
 	local remote_script="$relative_ws_dir/$script_rel_to_wsdir"
-	local remote_script_dir="$(dirname "$remote_script")"
+	local remote_script_dir
+	remote_script_dir="$(dirname "$remote_script")"
 	shift 2
-	if $force || ! ssh "$remote" [ -e $relative_ws_dir/git/src/lib ]; then
+	if $force || ! ssh "$remote" [ -e "$relative_ws_dir/git/src/lib" ]; then
 		remote_config "$remote"
 	fi
 
@@ -71,8 +76,8 @@ remote_run() {
 	fi
 
 	# most of rich's scripts need surround.sh too
-	if [[ -e "$surround_sh" ]]; then
-		scp "$surround_sh" "$remote:$remote_script_dir"
+	if [[ -e "$include_sh" ]]; then
+		scp "$include_sh" "$remote:$remote_script_dir"
 	fi
-	ssh -t "$remote" $sudo "$remote_script" $@
+	ssh -t "$remote" $sudo "$remote_script" "$@"
 }

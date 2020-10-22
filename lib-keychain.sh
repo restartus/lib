@@ -7,7 +7,6 @@
 ## usage use_openssh_keychain [key1 key2...]
 ## returns 0 if no reboot required other wise returns 1
 use_openssh_keychain() {
-	local keys="$@"
 	local no_keychain_found=0
 
 	# only for linux systems
@@ -29,7 +28,7 @@ use_openssh_keychain() {
 
 	# keychain will start if it isn't already and running eval will mean we use it instead of the
 	# gnome keyring and if the keys requested are not there it will add them
-	eval $(keychain --eval $@)
+	eval "$(keychain --eval "$@")"
 	# The daemon has keyring if it gnome keyring, it has agent if it is keychain
 	#if [[ -z $SSH_AUTH_SOCK || ! $SSH_AUTH_SOCK =~ agent ]]
 	#then
@@ -48,9 +47,13 @@ use_openssh_keychain() {
 		# Use the ssh-agent if it is active
 		# Normally prebuild.sh should add the keychain and ssh-add to the .bash_profile
 		# But if it doesn't, we manually go through looking for the right agent
-		agents=($(find /tmp/ssh-* -user $USER -name agent.* -print 2>/dev/null || true))
-		for agent in ${agents[@]}; do
-			log_verbose Trying $agent for $KEY
+		agents=()
+		# this prevents problems per Shellcheck SC2207
+		# https://github.com/koalaman/shellcheck/wiki/SC2207
+		IFS=" " read -r -a agents <<<"$(find /tmp/ssh-* -user "$USER" -name 'agent.*' -print 2>/dev/null)"
+
+		for agent in "${agents[@]}"; do
+			log_verbose "Trying $agent for $KEY"
 			if [[ ! -r $agent ]]; then
 				continue
 			fi

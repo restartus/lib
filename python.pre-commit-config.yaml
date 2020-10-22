@@ -7,22 +7,32 @@
 ---
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v3.2.0
+    rev: v3.3.0
     hooks:
       - id: check-added-large-files
       - id: check-case-conflict
       - id: check-builtin-literals
       - id: check-executables-have-shebangs
-      - id: check-merge-conflict
       - id: check-json
+      - id: check-merge-conflict
       - id: check-yaml
         args: [--allow-multiple-documents]
       - id: check-symlinks
       - id: check-toml
+      - id: check-yaml
+      - id: detect-aws-credentials
       - id: detect-private-key
       - id: end-of-file-fixer
-      # - id: detect-aws-credentials
+      - id: mixed-line-ending
       - id: trailing-whitespace
+
+  - repo: https://github.com/jumanjihouse/pre-commit-hooks
+    rev: 2.1.4
+    hooks:
+      - id: markdownlint
+      - id: shellcheck
+      - id: shfmt
+
   # https://ljvmiranda921.github.io/notebook/2018/06/21/precommits-using-black-and-flake8/
   # https://github.com/pre-commit/mirrors-mypy
   - repo: https://github.com/pre-commit/mirrors-mypy
@@ -30,7 +40,7 @@ repos:
     hooks:
       - id: mypy
   - repo: https://github.com/pycqa/flake8
-    rev: 3.8
+    rev: 3.8.4
     hooks:
       - id: flake8
   - repo: https://github.com/pycqa/pydocstyle

@@ -29,17 +29,17 @@ jobs:
       - name: Lint with mypy
         run: |
           pip install mypy
-          mypy --namespace-packages $(find ./restart -name "*.py")
+          mypy --namespace-packages $(find . -name "*.py")
 
       - name: Lint with bandit
         run: |
           pip install bandit
-          bandit $(find ./restart -name "*.py")
+          bandit $(find . -name "*.py")
 
       - name: Lint with pydocstyle
         run: |
           pip install pydocstyle
-          pydocstyle --convention=google $(find ./restart/ -name "*.py")
+          pydocstyle --convention=google $(find . -name "*.py")
 
       - name: Reformat with black
         uses: psf/black@stable
@@ -48,4 +48,4 @@ jobs:
       - name: Lint with yamllint
         run: |
           pip install yamllint
-          yamllint $(find ./restart/ -name "*.yaml")
+          yamllint $(find . -name "*.yaml")

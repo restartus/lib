@@ -16,6 +16,9 @@
 # YOu will want to change these depending on the image and the org
 repo ?= "richt"
 dest_dir ?= /home/$(DOCKER_USER)/$(name)
+commands ?=
+volumes ?= -v "$$(readlink -f "."):$(dest_dir)"
+flags ?=
 
 name ?= "$$(basename $(PWD))"
 Dockerfile ?= Dockerfile
@@ -34,8 +37,6 @@ PIP ?=
 # pip packages that cannot be conda installed
 PIP_ONLY ?=
 
-volumes ?= -v $$(readlink -f "."):$(dest_dir)
-flags ?=
 docker_flags ?= --build-arg "DOCKER_USER=$(DOCKER_USER)" \
 				--build-arg "NB_USER=$(DOCKER_USER)" \
 				--build-arg "ENV=$(DOCKER_ENV)" \
@@ -111,7 +112,7 @@ run: stop
 	echo last found is $$last ; \
 	docker run -dt \
 		--name $(container)-$$((last+1)) \
-		$(volumes) $(flags) $(image); \
+		$(volumes) $(flags) $(image) $(commands); \
 	sleep 4; \
 	docker logs $(container)-$$((last+1))
 

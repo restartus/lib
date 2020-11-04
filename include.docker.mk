@@ -12,6 +12,11 @@
 # Assumes GNU M4 is installed
 # https://github.com/moby/moby/issues/735
 #
+#
+# YOu will want to change these depending on the image and the org
+repo ?= "richt"
+dest_dir ?= /home/$(DOCKER_USER)/$(name)
+
 name ?= "$$(basename $(PWD))"
 Dockerfile ?= Dockerfile
 Dockerfile.in ?= $(Dockerfile).in
@@ -29,7 +34,6 @@ PIP ?=
 # pip packages that cannot be conda installed
 PIP_ONLY ?=
 
-dest_dir ?= /home/$(DOCKER_USER)/$(name)
 volumes ?= -v $$(readlink -f "."):$(dest_dir)
 flags ?=
 docker_flags ?= --build-arg "DOCKER_USER=$(DOCKER_USER)" \

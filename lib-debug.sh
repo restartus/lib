@@ -12,17 +12,14 @@
 lib_name="$(basename "${BASH_SOURCE%.*}")"
 # dashes are not legal in bash names
 lib_name=${lib_name//-/_}
-#echo trying $lib_name
 # This is how to create a pointer by reference in bash so
 # it checks for the existance of the variable named in $lib_name
 # not how we use the escaped $ to get the reference
 #echo eval [[ -z \${$lib_name-} ]] returns
 #eval [[ -z \${$lib_name-} ]]
 #echo $?
-echo "in debug set $lib_name"
 if eval "[[ ! -v $lib_name ]]"; then
 	# how to do an indirect reference
-	echo running debug
 	eval "$lib_name=true"
 
 	# Debug tools

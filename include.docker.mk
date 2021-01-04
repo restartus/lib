@@ -15,19 +15,24 @@
 #
 # YOu will want to change these depending on the image and the org
 repo ?= "richt"
-dest_dir ?= /home/$(DOCKER_USER)/$(name)
+name ?= "$$(basename $(PWD))"
+
+DOCKER_USER ?= docker
+DEST_DIR ?= /home/$(DOCKER_USER)/$(name)
+# https://stackoverflow.com/questions/18136918/how-to-get-current-relative-directory-of-your-makefile
+SRC_DIR ?= $(CURDIR)/data
 commands ?=
-volumes ?= -v "$$(readlink -f "."):$(dest_dir)"
+volumes ?= --mount "type=bind,source=$(SRC_DIR),target=$(DEST_DIR)"
+# -v is deprecated
+# volumes ?= -v "$$(readlink -f "./data"):$(DEST_DIR)"
 flags ?=
 
-name ?= "$$(basename $(PWD))"
 Dockerfile ?= Dockerfile
 Dockerfile.in ?= $(Dockerfile).in
 image ?= $(repo)/$(name)
 container := $(name)
 build_path ?= .
 MAIN ?= $(name).py
-DOCKER_USER ?= docker
 DOCKER_ENV ?= docker
 CONDA_ENV ?= $(name)
 SHELL ?= /bin/bash
@@ -38,6 +43,7 @@ PIP ?=
 PIP_ONLY ?=
 
 docker_flags ?= --build-arg "DOCKER_USER=$(DOCKER_USER)" \
+				--build-arg "DEST_DIR=$(DEST_DIR)" \
 				--build-arg "NB_USER=$(DOCKER_USER)" \
 				--build-arg "ENV=$(DOCKER_ENV)" \
 				--build-arg "PYTHON=$(PYTHON)" \
@@ -88,11 +94,22 @@ no-cache: $(Dockerfile)
 		--build-arg NB_USER=$(DOCKER_USER) -f $(Dockerfile) -t $(image) $(build_path)
 	docker push $(image)
 
+# bash -c means the first argument is run and then the next are set as the $1,
+# to it and not that you use awk with the \$ in double quotes
 for_containers = bash -c 'for container in $$(docker ps -a | grep "$$0" | awk "{print \$$NF}"); \
 						  do \
-						  	echo docker $$1 "$$container" $$2 $$3 $$4 $$5 $$6 $$7 $$8 $$9; \
 						  	docker $$1 "$$container" $$2 $$3 $$4 $$5 $$6 $$7 $$8 $$9; \
 						  done'
+
+# we use https://stackoverflow.com/questions/12426659/how-to-extract-last-part-of-string-in-bash
+# Because of quoting issues with awk
+docker_run = bash -c ' \
+	last=$$(docker ps | grep $(image) | awk "{print \$$NF}" | cut -d/ -f2 | rev | cut -d- -f 1 | rev | sort -r | head -n1) ; \
+	docker run $$@ \
+		--name $(container)-$$((last+1)) \
+		$(volumes) $(flags) $(image) $(commands) $(RUN_ARGS); \
+	sleep 4; \
+	docker logs $(container)-$$((last+1))'
 
 ## stop: halts all running containers
 .PHONY: stop
@@ -105,24 +122,53 @@ stop:
 pull:
 	docker pull $(image)
 
-## run: stops all the containers and then runs one locally
+## run [args]: stops all the containers and then runs in the background
+##             if there are flags than to a make -- run --flags [args]
+# https://stackoverflow.com/questions/2214575/passing-arguments-to-make-run
+# Hack to allow parameters after run only works with GNU make
+# Note no indents allowed for ifeq
+ifeq (run,$(firstword $(MAKECMDGOALS)))
+# use the rest of the goals as arguments
+RUN_ARGS := $(wordlist 2,$(words $(MAKECMDGOALS)), $(MAKECMDGOALS))
+# and create phantom targets for all those args
+$(eval $(RUN_ARGS):;@:)
+endif
+
+# https://stackoverflow.com/questions/30137135/confused-about-docker-t-option-to-allocate-a-pseudo-tty
+# docker run flags
+# -i interactive connects the docker stdin to the terminal stdin
+#    to exit the container send a CTRL-D to the stdin
+# -t terminal means that the input is a terminal (and is useless without -i)
+# -it this is almost always used together. commands like ls treat things
+#     differently if they are not readl terminals
+# 
+# https://www.tecmint.com/run-docker-container-in-background-detached-mode/
+# -d run in detached mode so it runs in the background and output goes 
+#    to the terminal if -t is set or it goes to the log otherwise
+#  docker attach will reconnect it to the foreground.
+# -rm remove the container when it exits
+
+
 .PHONY: run
 run: stop
-	last=$$(docker ps | grep $(image) | awk '{print $$NF}' | cut -d/ -f2 | awk 'BEGIN { FS="-" }; {print $$NF}' | sort -r | head -n1) ; \
-	echo last found is $$last ; \
-	docker run -dt \
-		--name $(container)-$$((last+1)) \
-		$(volumes) $(flags) $(image) $(commands); \
-	sleep 4; \
-	docker logs $(container)-$$((last+1))
+	$(docker_run) -dt
+
+## exec: Run the docker container in foreground like a shell script
+# note no --re needed we automaticaly do this and need for logs
+.PHONY: exec
+exec: stop
+	$(docker_run) -it
 
 ## shell: run the interactive shell in the container
+# https://gist.github.com/mitchwongho/11266726
+# Need entrypoint to make sure we get something interactive
 .PHONY: shell
 shell: stop
 	docker pull $(image)
 	docker run -it \
+		--entrypoint /bin/bash \
 		--name $(container)-$$((last+1)) \
-		$(volumes) $(flags) $(image) bash
+		$(volumes) $(flags) $(image)
 
 ## docker-debug: interactive but do not pull for use offline
 .PHONY: docker-debug

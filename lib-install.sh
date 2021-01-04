@@ -74,7 +74,7 @@ if eval "[[ ! -v $lib_name ]]"; then
 		# performance better if you declare an integer
 		declare -i missing=0
 		for cask in "$@"; do
-			if ! brew cask list "$cask" >/dev/null 2>&1; then
+			if ! brew list --cask "$cask" >/dev/null 2>&1; then
 				# remember if the return value is a zero this fails or
 				# preincrement
 				((++missing))
@@ -98,7 +98,7 @@ if eval "[[ ! -v $lib_name ]]"; then
 
 		for cask in "$@"; do
 			local brew_cask
-			brew_cask="$(brew cask info "$cask" 2>&1)"
+			brew_cask="$(brew info --cask "$cask" 2>&1)"
 			# for some reason a here string fails maybe too long
 			# Note we use the quoted variable so we can see the lines
 			if ! echo "$brew_cask" | head -n 1 | grep -q "^$cask"; then
@@ -172,7 +172,7 @@ if eval "[[ ! -v $lib_name ]]"; then
 			if grep -q "Not installed" <<<"$brew_cask"; then
 				log_verbose installing brew cask
 				# if verbose we show all the install commands
-				if ! eval brew cask install "$cask" "$output"; then
+				if ! eval brew install --cask "$cask" "$output"; then
 					((++errors))
 					log_verbose "$cask installed failed with $errors errors"
 				fi
@@ -184,7 +184,7 @@ if eval "[[ ! -v $lib_name ]]"; then
 	cask_uninstall() {
 		for package in "$@"; do
 			# it is ok if it isn't actually there
-			brew cask uninstall "$package" >/dev/null 2>&1 || true
+			brew uninstall --cask "$package" >/dev/null 2>&1 || true
 		done
 	}
 
@@ -323,12 +323,12 @@ if eval "[[ ! -v $lib_name ]]"; then
 			# look for Mac apps in a cask
 			# Note that search only searches for default Mac apps
 			# so need to use info and for some reason head -n 1
-			# cause brew cask info to fail
+			# cause brew info to fail
 			local brew_cask
-			brew_cask="$(brew cask info "$package" 2>&1)"
+			brew_cask="$(brew info --cask "$package" 2>&1)"
 			# Need the semicolon in case there is an error
 			# asking how many packages with similar names as with
-			# brew cask info parallel
+			# brew info parallel
 			if grep -q "^$package:" <<<"$brew_cask"; then
 				# found a brew cask now see if it is installed
 				if grep -q "Not installed" <<<"$brew_cask"; then

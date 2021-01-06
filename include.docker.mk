@@ -11,7 +11,7 @@ repo ?= "richt"
 name ?= "$$(basename $(PWD))"
 
 DOCKER_USER ?= docker
-DEST_DIR ?= /home/$(DOCKER_USER)/$(name)
+DEST_DIR ?= /home/$(DOCKER_USER)/data
 # https://stackoverflow.com/questions/18136918/how-to-get-current-relative-directory-of-your-makefile
 SRC_DIR ?= $(CURDIR)/data
 commands ?=
@@ -144,10 +144,12 @@ endif
 # https://stackoverflow.com/questions/30137135/confused-about-docker-t-option-to-allocate-a-pseudo-tty
 # docker run flags
 # -i interactive connects the docker stdin to the terminal stdin
-#    to exit the container send a CTRL-D to the stdin
+#    to exit the container send a CTRL-D to the stdin. This is used to run
+#    and then exit like a shell command
 # -t terminal means that the input is a terminal (and is useless without -i)
 # -it this is almost always used together. commands like ls treat things
-#     differently if they are not readl terminals
+#     differently if they are not readl terminals so this works like a shell
+# -dt runs but connects the stdin and stdout so logging works
 # 
 # https://www.tecmint.com/run-docker-container-in-background-detached-mode/
 # -d run in detached mode so it runs in the background and output goes 
@@ -156,15 +158,16 @@ endif
 # -rm remove the container when it exits
 
 
+## run: Run the docker container in the background (for web apps like Jupyter)
 .PHONY: run
 run: stop
 	$(docker_run) -dt
 
-## exec: Run the docker container in foreground like a shell script
+## exec: Run docker in foreground and then exit (treat like any Unix command)
 # note no --re needed we automaticaly do this and need for logs
 .PHONY: exec
 exec: stop
-	$(docker_run) -it
+	$(docker_run) -i
 
 ## shell: run the interactive shell in the container
 # https://gist.github.com/mitchwongho/11266726

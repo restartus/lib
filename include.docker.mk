@@ -5,14 +5,7 @@
 # requires include.mk
 #
 # The makefiles are self documenting, you use two leading for make help to produce output
-#
-# Uses m4 for includes so Dockerfile.in are processed this way
-# since docker does not support a macro language
-# https://www3.physnet.uni-hamburg.de/physnet/Tru64-Unix/HTML/APS32DTE/M4XXXXXX.HTM
-# Assumes GNU M4 is installed
-# https://github.com/moby/moby/issues/735
-#
-#
+
 # YOu will want to change these depending on the image and the org
 repo ?= "richt"
 name ?= "$$(basename $(PWD))"
@@ -27,15 +20,31 @@ volumes ?= --mount "type=bind,source=$(SRC_DIR),target=$(DEST_DIR)"
 # volumes ?= -v "$$(readlink -f "./data"):$(DEST_DIR)"
 flags ?=
 
+# https://stackoverflow.com/questions/589276/how-can-i-use-bash-syntax-in-makefile-targets
+SHELL := /bin/bash
+
 Dockerfile ?= Dockerfile
-Dockerfile.in ?= $(Dockerfile).in
+#
+# Uses m4 for includes so Dockerfile.m4 are processed this way
+# since docker does not support a macro language
+# https://www3.physnet.uni-hamburg.de/physnet/Tru64-Unix/HTML/APS32DTE/M4XXXXXX.HTM
+# Assumes GNU M4 is installed
+# https://github.com/moby/moby/issues/735
+# If you want preprocessing just create a Dockerfile.m4
+Dockerfile.m4 ?= $(Dockerfile).m4
+# http://www.scottmcpeak.com/autodepend/autodepend.html
+# The leading dash means if the precendts don't exist then don't complain
+## docker: pull docker image and builds locally along with tag with git sha
+-$(Dockerfile): $(Dockerfile.m4)
+	m4 <"$(Dockerfile.m4)" >"$(Dockerfile)"
+
 image ?= $(repo)/$(name)
 container := $(name)
 build_path ?= .
 MAIN ?= $(name).py
 DOCKER_ENV ?= docker
 CONDA_ENV ?= $(name)
-SHELL ?= /bin/bash
+# https://github.com/moby/moby/issues/7281
 
 # pip packages that can also be installed by conda
 PIP ?=
@@ -52,9 +61,6 @@ docker_flags ?= --build-arg "DOCKER_USER=$(DOCKER_USER)" \
 # main.py includes streamlit code that only runs when streamlit invoked
 # --restart=unless-stopped  not needed now
 
-## docker: pull docker image and builds locally along with tag with git sha
-$(Dockerfile): $(Dockerfile.in)
-	m4 <"$(Dockerfile.in)" >"$(Dockerfile)"
 
 .PHONY: docker
 docker: $(Dockerfile)
@@ -103,9 +109,10 @@ for_containers = bash -c 'for container in $$(docker ps -a | grep "$$0" | awk "{
 
 # we use https://stackoverflow.com/questions/12426659/how-to-extract-last-part-of-string-in-bash
 # Because of quoting issues with awk
+# bash -c uses $0 for the first argument so $@ starts at $1 hence we need both
 docker_run = bash -c ' \
 	last=$$(docker ps | grep $(image) | awk "{print \$$NF}" | cut -d/ -f2 | rev | cut -d- -f 1 | rev | sort -r | head -n1) ; \
-	docker run $$@ \
+	docker run $$0 $$@ \
 		--name $(container)-$$((last+1)) \
 		$(volumes) $(flags) $(image) $(commands) $(RUN_ARGS); \
 	sleep 4; \
@@ -114,8 +121,8 @@ docker_run = bash -c ' \
 ## stop: halts all running containers
 .PHONY: stop
 stop:
-	@$(for_containers) $(container) stop
-	@$(for_containers) $(container) "rm -v"
+	@$(for_containers) $(container) stop > /dev/null
+	@$(for_containers) $(container) "rm -v" > /dev/null
 
 ## pull: pulls the latest image
 .PHONY: pull
@@ -127,7 +134,7 @@ pull:
 # https://stackoverflow.com/questions/2214575/passing-arguments-to-make-run
 # Hack to allow parameters after run only works with GNU make
 # Note no indents allowed for ifeq
-ifeq (run,$(firstword $(MAKECMDGOALS)))
+ifeq (exec,$(firstword $(MAKECMDGOALS)))
 # use the rest of the goals as arguments
 RUN_ARGS := $(wordlist 2,$(words $(MAKECMDGOALS)), $(MAKECMDGOALS))
 # and create phantom targets for all those args
@@ -169,11 +176,6 @@ shell: stop
 		--entrypoint /bin/bash \
 		--name $(container)-$$((last+1)) \
 		$(volumes) $(flags) $(image)
-
-## docker-debug: interactive but do not pull for use offline
-.PHONY: docker-debug
-docker-debug: stop
-	@docker run -it $(flags) --name $(container) $(image) bash
 
 ## resume: keep running an existing container
 .PHONY: resume

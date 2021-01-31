@@ -14,10 +14,9 @@ DOCKER_USER ?= docker
 DEST_DIR ?= /home/$(DOCKER_USER)/data
 # https://stackoverflow.com/questions/18136918/how-to-get-current-relative-directory-of-your-makefile
 SRC_DIR ?= $(CURDIR)/data
-commands ?=
-volumes ?= --mount "type=bind,source=$(SRC_DIR),target=$(DEST_DIR)"
 # -v is deprecated
 # volumes ?= -v "$$(readlink -f "./data"):$(DEST_DIR)"
+volumes ?= --mount "type=bind,source=$(SRC_DIR),target=$(DEST_DIR)"
 flags ?=
 
 # https://stackoverflow.com/questions/589276/how-can-i-use-bash-syntax-in-makefile-targets
@@ -109,12 +108,12 @@ for_containers = bash -c 'for container in $$(docker ps -a | grep "$$0" | awk "{
 
 # we use https://stackoverflow.com/questions/12426659/how-to-extract-last-part-of-string-in-bash
 # Because of quoting issues with awk
-# bash -c uses $0 for the first argument so $@ starts at $1 hence we need both
+# bash -c uses $0 for the first argument
 docker_run = bash -c ' \
 	last=$$(docker ps | grep $(image) | awk "{print \$$NF}" | cut -d/ -f2 | rev | cut -d- -f 1 | rev | sort -r | head -n1) ; \
-	docker run $$0 $$@ \
+	docker run $$0 \
 		--name $(container)-$$((last+1)) \
-		$(volumes) $(flags) $(image) $(commands) $(RUN_ARGS); \
+		$(volumes) $(flags) $(image) $$@;\
 	sleep 4; \
 	docker logs $(container)-$$((last+1))'
 
@@ -134,12 +133,14 @@ pull:
 # https://stackoverflow.com/questions/2214575/passing-arguments-to-make-run
 # Hack to allow parameters after run only works with GNU make
 # Note no indents allowed for ifeq
-ifeq (exec,$(firstword $(MAKECMDGOALS)))
-# use the rest of the goals as arguments
-RUN_ARGS := $(wordlist 2,$(words $(MAKECMDGOALS)), $(MAKECMDGOALS))
-# and create phantom targets for all those args
-$(eval $(RUN_ARGS):;@:)
-endif
+# This commented out does not work if MAKECMDGOALS 
+# include real targets like 'run'
+#ifeq (exec,$(firstword $(MAKECMDGOALS)))
+## use the rest of the goals as arguments
+#RUN_ARGS := $(wordlist 2,$(words $(MAKECMDGOALS)), $(MAKECMDGOALS))
+## and create phantom targets for all those args
+#$(eval $(RUN_ARGS):;@:)
+#endif
 
 # https://stackoverflow.com/questions/30137135/confused-about-docker-t-option-to-allocate-a-pseudo-tty
 # docker run flags
@@ -161,24 +162,25 @@ endif
 ## run: Run the docker container in the background (for web apps like Jupyter)
 .PHONY: run
 run: stop
-	$(docker_run) -dt
+	$(docker_run) -dt $(cmd)
 
 ## exec: Run docker in foreground and then exit (treat like any Unix command)
+##       if you need to pass arguments down then use the form
 # note no --re needed we automaticaly do this and need for logs
+#
 .PHONY: exec
 exec: stop
-	$(docker_run) -i
+	$(docker_run) -t $(cmd)
 
 ## shell: run the interactive shell in the container
 # https://gist.github.com/mitchwongho/11266726
 # Need entrypoint to make sure we get something interactive
 .PHONY: shell
-shell: stop
+shell:
 	docker pull $(image)
 	docker run -it \
 		--entrypoint /bin/bash \
-		--name $(container)-$$((last+1)) \
-		$(volumes) $(flags) $(image)
+		--rm $(volumes) $(flags) $(image)
 
 ## resume: keep running an existing container
 .PHONY: resume

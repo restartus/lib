@@ -134,22 +134,25 @@ ifeq ($(ENV),conda)
 	conda config --env --add channels conda-forge
 	conda config --env --set channel_priority strict
 	conda install --name $(name) -y python=$(PYTHON)
-	[[ -r environment.yml ]] && conda env update --name $(name) -y -f environment.yml || true
-endif
-# https://stackoverflow.com/questions/38801796/makefile-set-if-variable-is-empty
-ifneq ($(strip $(PIP)),)
-	$(INSTALL) $(PIP) || true
-endif
-ifneq ($(strip $(PIP_DEV)),)
-	$(INSTALL_DEV) $(PIP_DEV) || true
-endif
-ifneq ($(strip $(PIP_ONLY)),)
-	$(RUN) pip install $(PIP_ONLY) || true
-endif
+	[[ -r environment.yml ]] && conda env update --name $(name) -f environment.yml || true
+	@echo WARNING -- after conda activate you must run export PYTHONNOUSERSITE=true
+	exit
+else
+	# https://stackoverflow.com/questions/38801796/makefile-set-if-variable-is-empty
+	ifneq ($(strip $(PIP)),)
+		$(INSTALL) $(PIP) || true
+	endif
+	ifneq ($(strip $(PIP_DEV)),)
+		$(INSTALL_DEV) $(PIP_DEV) || true
+	endif
+	ifneq ($(strip $(PIP_ONLY)),)
+		$(RUN) pip install $(PIP_ONLY) || true
+	endif
+	ifeq ($(ENV),pipenv)
+		pipenv lock
+		pipenv update
+	endif
 
-ifeq ($(ENV),pipenv)
-	pipenv lock
-	pipenv update
 endif
 
 ## export: export configuration to requirements.txt or environment.yml
@@ -220,10 +223,10 @@ conda-clean:
 	conda env remove -n $(name) || true
 	conda clean -afy
 
-## conda: activate conda environment
+## conda: activate conda environment must be done in bash shell
 .PHONY: conda
 conda:
-	$(ACTIVATE) && conda activate $(name)
+	@echo "run conda activate $(name) in you shell"
 
 # Note we are using setup.cfg for all the mypy and flake excludes and config
 ## lint : code check (conda)

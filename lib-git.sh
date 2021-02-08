@@ -5,12 +5,20 @@
 ## @author rich
 ##
 ##
-## git_check_connection git-key
-##
-## git_install_or_update [ -f ] repo [ organization ]
-## Remember use only local variables!
-## Assumes HOME and SCRIPTNAME are set
-##
+
+## git_repo tells you if you are in a git repo
+## git_repo [ directory to check default to $PWD ]
+git_repo() {
+	dir="$PWD"
+	if (( $# >= 1 ))
+	then
+		dir="$1"
+	fi
+	# https://davidwalsh.name/detect-git-directory
+	if ! git rev-parse --git-dir >/dev/null 2>&1; then
+		exit 1
+	fi
+}
 
 ## git_get_org returns as a string the name of the organization for this repo
 ## git_organization [ directory to check ]
@@ -19,7 +27,7 @@ git_organization() {
 	# first get the front half
 	dir="$PWD"
 	# if there is an argument use it
-	if [[ $# -gt 1 ]]; then
+	if (( $# >= 1 )); then
 		dir="$1"
 	fi
 

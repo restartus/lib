@@ -51,5 +51,6 @@ hugo-post:
 # https://cli.netlify.com/getting-started
 .PHONY: netlify
 netlify:
+	netlify login
 	netlify link
 	netlify env:set GIT_LFS_ENABLED true

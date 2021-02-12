@@ -6,6 +6,21 @@
 ##
 ##
 
+## returns echos the current default branch
+# https://stackoverflow.com/questions/28666357/git-how-to-get-default-branch
+# a longer version
+# basename "$(git symbolic-ref --short refs/remotes/origin/HEAD)"
+# usage: git_default_branch [remote]
+git_default_branch() {
+	remote=origin
+	if (( $# >= 1 )); then
+		remote="$1"
+	fi
+	git remote set-head "$remote" --auto
+	basename "$(git rev-parse --abbrev-ref origin/HEAD)"
+
+}
+
 ## git_repo tells you if you are in a git repo
 ## git_repo [ directory to check default to $PWD ]
 git_repo() {

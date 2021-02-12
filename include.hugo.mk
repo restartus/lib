@@ -11,7 +11,7 @@ HUGO_NAME ?= hugo
 # https://github.com/jojomi/docker-hugo
 # HUGO_WATCH means keep runnig
 # without it, will just create the static files
-run ?= docker run --rm -v $$(pwd):/src -e HUGO_WATCH=1
+run ?= docker run --rm -v $$(pwd):/src
 HUGO_VER ?= 0.76
 HUGO_IMAGE ?= "$(HUGO_REPO)/$(HUGO_NAME):$(HUGO_VER)"
 port ?= 1313
@@ -22,14 +22,14 @@ theme ?= gohugo-theme-ananke
 ## hugo: make the the site
 .PHONY: hugo
 hugo:
-	$(run)
+	$(run) $(HUGO_IMAGE)
 
 ## hugo-server: run the site
 # Use this line for kalkegg
 #$(run) -p $(port):$(port) "$(HUGO_IMAGE)" server
 .PHONY: hugo-server
 hugo-server:
-	$(run) -p $(port):$(port) "$(HUGO_IMAGE)"
+	$(run) -e HUGO_WATCH=1 -it -p $(port):$(port) "$(HUGO_IMAGE)"
 
 ## hugo-new: create a new site
 .PHONY: hugo-new

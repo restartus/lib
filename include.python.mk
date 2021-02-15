@@ -20,7 +20,7 @@ exclude := -not \( -path "./extern/*" -o -path "./.git/*" \)
 all_py := $$(find restart -name "*.py" $(exclude) )
 all_yaml := $$(find restart -name "*.yaml" $(exclude))
 # gitpod needs three digits
-PYTHON ?= 3.8
+PYTHON ?= 3.9
 DOC ?= doc
 LIB ?= lib
 name ?= $$(basename $(PWD))
@@ -123,6 +123,7 @@ update:
 vi:
 	cd $(ED_DIR) && $(RUN) "$$VISUAL" $(ED)
 
+# https://www.technologyscout.net/2017/11/how-to-install-dependencies-from-a-requirements-txt-file-with-conda/
 .PHONY: install
 install: $(INSTALL_REQ)
 	@echo PIP=$(PIP)
@@ -135,6 +136,7 @@ ifeq ($(ENV),conda)
 	conda config --env --set channel_priority strict
 	conda install --name $(name) -y python=$(PYTHON)
 	[[ -r environment.yml ]] && conda env update --name $(name) -f environment.yml || true
+	[[ -r requirements.txt ]] && (while read requirement; do conda install -y "$$requirement"; done < requirements.txt)
 	@echo WARNING -- after conda activate you must run export PYTHONNOUSERSITE=true
 	exit
 else

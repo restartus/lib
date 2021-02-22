@@ -18,7 +18,7 @@ HUGO_FORCE ?=
 ## export HUGO_PORT=1313: to change port
 HUGO_PORT ?= 1313
 ## export HUGO_THEME_ORG=themefisher: to change theme github org
-HUGO_THEME_ORG ?= themefisher
+HUGO_THEME_ORG ?= richtong
 ## export HUGO_THEME=parsa_hugo: to change theme
 HUGO_THEME ?= parsa-hugo
 # Note no https here but it is the path after that
@@ -67,7 +67,9 @@ endif
 # https://www.hugofordevelopers.com/articles/master-hugo-modules-managing-themes-as-modules/
 # https://discourse.gohugo.io/t/hugo-modules-for-dummies/20758
 # by convention we turn the entire repo into a module
-## hugo-theme: Get a HUGO_THEME as module
+# https://geeksocket.in/posts/hugo-modules/
+## hugo-theme: Get a HUGO_THEME as module (in development not working yet)
+## currently broken with themefisher/parsa-hugo but works with richtong/parsa-hugo
 .PHONY: hugo-theme
 hugo-theme:
 	if ! grep -q "$(GIT_PATH)" go.mod; then \
@@ -77,7 +79,7 @@ hugo-theme:
 		echo "[[module.imports]]" >> config.toml; \
 		echo "path = \"$(HUGO_THEME_PATH)\"" >> config.toml; \
 	fi
-	cp $(GIT_PATH)/ExampleSite
+	@echo see $(HUGO_THEME_PATH)/exampleSite and copy 
 
 ## hugo-mod: get latest go modules and add to repo
 .PHONY: hugo-mod

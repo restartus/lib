@@ -70,7 +70,7 @@ gcloud:
 ## git: createe a git repo
 .PHONY: git
 git:
-ifeq ($(NEW_REPO),"")
+ifeq ($(NEW_REPO),)
 	@echo "create with NEW_REPO=_name_ make git "
 else
 	gh repo create git@github.com:$(GIT_ORG)/$(NEW_REPO)

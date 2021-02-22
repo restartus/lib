@@ -14,6 +14,8 @@ HUGO_NAME ?= hugo
 run ?= docker run --rm -v $$(pwd):/src
 HUGO_VER ?= 0.76
 HUGO_IMAGE ?= "$(HUGO_REPO)/$(HUGO_NAME):$(HUGO_VER)"
+# force a change
+FORCE ?=
 port ?= 1313
 theme_org ?= budparr
 theme ?= gohugo-theme-ananke
@@ -34,9 +36,19 @@ hugo-server:
 ## hugo-new: create a new site
 .PHONY: hugo-new
 hugo-new:
-	$(run) $(HUGO_IMAGE) new site .
+ifneq ($(FORCE),"")
+	@echo even with $(FORCE) need to remove some files
+	rm -rf layouts content archetypes themes static data config.toml
+endif
+	$(run) $(HUGO_IMAGE) hugo new site . $(FORCE)
 
-## hugo-theme: add a theme
+## hugo-mod: get latest go modules and add to repo
+.PHONY: hugo-mod
+hugo-mod:
+	$(run) $(HUGO IMAGE) mod get -u ./...
+	$(run) $(HUGO_IMAGE) mod vendor
+
+## hugo-theme: add a theme (deprecated used hugo-mod instead)
 .PHONY: hugo-theme
 hugo-theme:
 	git submodule add "https://github.com/$(theme_org)/$(theme)" "themes/$(theme)" || true
@@ -51,6 +63,8 @@ hugo-post:
 # https://cli.netlify.com/getting-started
 .PHONY: netlify
 netlify:
+	netlify logout
 	netlify login
-	netlify link
+	if [[ -d .netlify ]]; then netlify link; else netlify init; fi
 	netlify env:set GIT_LFS_ENABLED true
+	netlify open

@@ -22,6 +22,36 @@ if eval "[[ ! -v $lib_name ]]"; then
 	# how to do an indirect reference
 	eval "$lib_name=true"
 
+	# run command and enable verbose and echo for dry run
+	# this require lib-log.sh
+	# usage util_cmd [-s] [-n] cmds...
+	# -n dry_run command
+	util_cmd() {
+		local prefix_cmd
+		prefix_cmd=""
+		if [[ $1 == "-s" ]]; then
+			local prefix_cmd="git submodule foreach"
+			shift
+		fi
+		local dry_run
+		dry_run=""
+		if [[ $1 == "-n" ]]; then
+			local dry_run=" echo "
+			log_verbose "dry_run is $dry_run"
+			shift
+		fi
+		# convert arguments back to an array
+		for cmd in "$@"; do
+			# need to do the eval so to force variable parsing
+			# shellcheck disable=SC2086
+			log_verbose "run $(eval $prefix_cmd echo $cmd)"
+			# shellcheck disable=SC2086
+			if ! eval $prefix_cmd $dry_run $cmd; then
+				log_error 20 "Failed with $?: $cmd"
+			fi
+		done
+	}
+
 	# usage: util_sudo [-u user ] [files to be accessed]
 	# return the text "sudo" if any of the files are not writeable
 	# example: eval $(util_sudo_if /Volumes) mkdir -p /Volumes/<ext>

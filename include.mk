@@ -6,7 +6,9 @@ TAG ?= v1
 # https://www.gnu.org/software/make/manual/make.html#Flavors
 # Use simple expansion for most
 SHELL ?= /bin/bash
-GIT_ORG ?= restartus
+GIT_ORG ?= richtong
+SUBMODULE_HOME ?= "$(HOME)/ws/git/src"
+NEW_REPO ?=
 name ?= $$(basename "$(PWD)")
 # if you have include.python installed then it uses the environment but by
 # default we assume we are using the raw environment
@@ -64,3 +66,20 @@ repo-install: git-lfs pre-commit-install
 .PHONY: gcloud
 gcloud:
 	gcloud projects list
+
+## git: createe a git repo
+.PHONY: git
+git:
+ifeq ($(NEW_REPO),"")
+	@echo "create with NEW_REPO=_name_ make git "
+else
+	gh repo create git@github.com:$(GIT_ORG)/$(NEW_REPO)
+	cd $(SUBMODULE_HOME)
+	git submodule add git@github.com:$(GIT_ORG)/$(NEW_REPO)
+	cd $(NEW_REPO)
+	git init
+	cat "## $(ORG) $(name) repo" >> README.md
+	git commit -m "README.md first commit"
+	git branch -M main
+	git push -u origin main
+endif

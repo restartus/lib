@@ -5,13 +5,11 @@
 # so only single document in a yaml file is allowed
 # tried dockerfilelint but too strict and disabling does not work
 ---
-# python regex syntax for inclusion
+# python regex syntax for includsion
 # https://www.w3schools.com/python/python_regex.asp
-# So this means only look at python files
 #files: ".py$"
 # This is only for python and other files
-# This means exclude directories ./typescript
-#exclude: "typescript|golang"
+exclude: "typescript|golang"
 
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
@@ -45,10 +43,11 @@ repos:
       - id: shellcheck
       - id: shfmt
 
-  # https://ljvmiranda921.github.io/notebook/2018/06/21/precommits-using-black-and-flake8/
+   # https://ljvmiranda921.github.io/notebook/2018/06/21/precommits-using-black-and-flake8/
   # https://github.com/pre-commit/mirrors-mypy
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: 'v0.782'
+    #rev: 'v0.782' will not run as of Feb 2020
+    rev: v0.812
     hooks:
       - id: mypy
   - repo: https://github.com/pycqa/flake8
@@ -60,21 +59,21 @@ repos:
     hooks:
       - id: pydocstyle
 
-  # puts the isort.cfg at the root we do not want that
-  # https://pypi.org/project/seed-isort-config/
-  # - repo: https://github.com/asottile/seed-isort-config
-  #   rev: v2.2.0
-  #   hooks:
-  #     # remember this will place things at the root of the repo
-  #     # but running in lint locally places it in the current directory
-  #    - id: seed-isort-config
-  # does not respect the local arguments
-  # - repo: https://github.com/timothycrosley/isort
-  #   rev: 5.2.0
-  #   hooks:
-  #     - id: isort
-  #       args: [--profile=black, -w 79]
-  # https://ljvmiranda921.github.io/notebook/2018/06/21/precommits-using-black-and-flake8/
+  ## puts the isort.cfg at the root we do not want that
+  ## https://pypi.org/project/seed-isort-config/
+  ## - repo: https://github.com/asottile/seed-isort-config
+  ##   rev: v2.2.0
+  ##   hooks:
+  ##     # remember this will place things at the root of the repo
+  ##     # but running in lint locally places it in the current directory
+  ##    - id: seed-isort-config
+  ## does not respect the local arguments
+  ## - repo: https://github.com/timothycrosley/isort
+  ##   rev: 5.2.0
+  ##   hooks:
+  ##     - id: isort
+  ##       args: [--profile=black, -w 79]
+  ## https://ljvmiranda921.github.io/notebook/2018/06/21/precommits-using-black-and-flake8/
 
   - repo: https://github.com/psf/black
     rev: 20.8b1

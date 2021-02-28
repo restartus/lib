@@ -25,7 +25,6 @@ repos:
         args: [--allow-multiple-documents]
       - id: check-symlinks
       - id: check-toml
-      - id: check-yaml
       - id: detect-aws-credentials
       - id: detect-private-key
       - id: end-of-file-fixer
@@ -43,21 +42,24 @@ repos:
       - id: shellcheck
       - id: shfmt
 
-   # https://ljvmiranda921.github.io/notebook/2018/06/21/precommits-using-black-and-flake8/
+  # covidwa does not have of these standards so comment out
+
+  # https://ljvmiranda921.github.io/notebook/2018/06/21/precommits-using-black-and-flake8/
   # https://github.com/pre-commit/mirrors-mypy
-  - repo: https://github.com/pre-commit/mirrors-mypy
-    #rev: 'v0.782' will not run as of Feb 2020
-    rev: v0.812
-    hooks:
-      - id: mypy
-  - repo: https://github.com/pycqa/flake8
-    rev: 3.8.4
-    hooks:
-      - id: flake8
-  - repo: https://github.com/pycqa/pydocstyle
-    rev: 5.1.1
-    hooks:
-      - id: pydocstyle
+  #- repo: https://github.com/pre-commit/mirrors-mypy
+  #  #rev: 'v0.782' will not run as of Feb 2020
+  #  rev: v0.812
+  #  hooks:
+  #    - id: mypy
+  #- repo: https://github.com/pycqa/flake8
+  #  rev: 3.8.4
+  #  hooks:
+  #    - id: flake8
+  # covidwa not using pydocstyle
+  #- repo: https://github.com/pycqa/pydocstyle
+  #  rev: 5.1.1
+  #  hooks:
+  #    - id: pydocstyle
 
   ## puts the isort.cfg at the root we do not want that
   ## https://pypi.org/project/seed-isort-config/
@@ -75,12 +77,12 @@ repos:
   ##       args: [--profile=black, -w 79]
   ## https://ljvmiranda921.github.io/notebook/2018/06/21/precommits-using-black-and-flake8/
 
-  - repo: https://github.com/psf/black
-    rev: 20.8b1
-    hooks:
-      - id: black
-        language_version: python3.9
-        args: [-l 79]
+  #- repo: https://github.com/psf/black
+  #  rev: 20.8b1
+  #  hooks:
+  #    - id: black
+  #      language_version: python3.9
+  #      args: [-l 79]
   # check shell scripts you check in
   - repo: git://github.com/detailyang/pre-commit-shell
     rev: v1.0.6

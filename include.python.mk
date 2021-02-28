@@ -24,13 +24,27 @@ PYTHON ?= 3.9
 DOC ?= doc
 LIB ?= lib
 name ?= $$(basename $(PWD))
+# put a python file here or the module name
 MAIN ?= $(name)
+#MAIN ?= ScrapeAllAndSend.py
+MAIN_PATH ?= $(PWD)
+
+# this is not yet a module so no name
+IS_MODULE ?= False
+ifeq ($(IS_MODULE),True)
+MODULE ?= -m $(MAIN)
+else
+MODULE ?= $(MAIN)
+endif
+
 STREAMLIT ?= $(MAIN)
-ED ?=
-ED_DIR ?= .
+
 # As of September 2020, run jupyter 0.2 and this generates a pipenv error
 # so ignore it
 PIPENV_CHECK_FLAGS ?= --ignore 38212
+PIP ?=
+# These cannot be installed in the environment must use pip install
+PIP_ONLY ?=
 PIP_DEV += \
 		 pre-commit \
 		 isort \
@@ -79,38 +93,47 @@ else ifeq ($(ENV),none)
 endif
 
 
+
 ## main: run the main program
 .PHONY: main
 main:
-	$(RUN) python -m $(MAIN) $(FLAGS)
+	$(RUN) python $(MODULE) $(FLAGS)
 
 ## pdb: run locally with python to test components from main
 .PHONY: pdb
 pdb:
-	$(RUN) python -m pdb -m $(MAIN) $(FLAGS)
+	$(ACTIVATE) && python -m pdb $(MODULE) $(FLAGS)
 
 ## debug: run with debug model on for main
 .PHONY: debug
 debug:
-	$(RUN) python -d -m $(MAIN) $(FLAGS)
+	$(RUN) python -d $(MODULE) $(FLAGS)
 
-# test-env: Test environment
-.PHONY: test-env
-test-env:
-	@echo 'ENV="$(ENV)" RUN="$(RUN)"'
-# The calling Makefile should set these should be at least one
 
-PIP ?=
-PIP_DEV ?=
-# These cannot be installed in the environment must use pip install
-PIP_ONLY ?=
+# https://docs.github.com/en/actions/guides/building-and-testing-python
+# https://pytest-cov.readthedocs.io/en/latest/config.html
+# https://docs.pytest.org/en/stable/usage.html
+## test: unit test
+.PHONY: test
+test:
+	pytest --doctest-modules "--cov=$(MAIN_PATH)"
+
+## test-ci: product junit for consumption by ci server
+# --doctest-modules --cove measure for a particular path
+# --junitxml is readable by Jenkins and CI servers
+.PHONY: test-ci
+test-ci:
+	pytest "--cov=$(MAIN_PATH)" --doctest-modules --junitxml=junit/test-results.xml --cov-report=xml --cov-report=html
+
 
 # https://www.gnu.org/software/make/manual/html_node/Splitting-Lines.html#Splitting-Lines
 # https://stackoverflow.com/questions/54503964/type-hint-for-numpy-ndarray-dtype/54541916
 #
-## test-type: Test the types NB, SRC and STREAMLIT
-.PHONY: test-type
-test-type:
+
+# test-env: Test environment (Makefile testing only)
+.PHONY: test-env
+test-env:
+	@echo 'ENV="$(ENV)" RUN="$(RUN)"'
 	@echo 'SRC="$(SRC)" NB="$(NB)" STREAMLIT="$(STREAMLIT)"'
 
 ## update: installs all  packages
@@ -131,14 +154,20 @@ install: $(INSTALL_REQ)
 	@echo PIP_DEV=$(PIP_DEV)
 ifeq ($(ENV),conda)
 	conda env list | grep ^$(name) || conda create -y --name $(name)
-	$(ACTIVATE)
 	conda config --env --add channels conda-forge
 	conda config --env --set channel_priority strict
 	conda install --name $(name) -y python=$(PYTHON)
 	[[ -r environment.yml ]] && conda env update --name $(name) -f environment.yml || true
-	[[ -r requirements.txt ]] && (while read requirement; do conda install -y "$$requirement"; done < requirements.txt)
-	@echo WARNING -- after conda activate you must run export PYTHONNOUSERSITE=true
+	[[ -r requirements.txt ]] && grep -v "^#" requirements.txt | \
+			(while read requirement; do \
+				if ! conda install --name $(name) -y "$$requirement"; then \
+					$(ACTIVATE) && pip install "$$requirement"; \
+				fi; \
+			done)
 	exit
+	# https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#setting-environment-variables
+	conda env config vars set PYTHONNOUSERSITE=true --name $(name)
+	@echo WARNING -- we do not parse the PYthon User site in ~/.
 else
 	# https://stackoverflow.com/questions/38801796/makefile-set-if-variable-is-empty
 	ifneq ($(strip $(PIP)),)

@@ -7,7 +7,7 @@
 ---
 # python regex syntax for includsion
 # https://www.w3schools.com/python/python_regex.asp
-#files: ".py$"
+# files: ".py$"
 # This is only for python and other files
 exclude: "typescript|golang"
 
@@ -87,3 +87,14 @@ repos:
     hooks:
       - id: shell-lint
         args: [--format=json]
+
+  # https://stackoverflow.com/questions/64011304/running-pytest-as-a-pre-commit-hook-no-such-file-or-directory-issue
+  # note this means pre-commit should run in your venv or conda
+  - repo: local
+    hooks:
+      - id: pytest
+        name: pytest
+        entry: pytest
+        language: system
+        pass_filenames: false
+        always_run: true

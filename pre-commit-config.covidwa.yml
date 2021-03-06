@@ -94,9 +94,21 @@ repos:
   # note this means pre-commit should run in your venv or conda
   - repo: local
     hooks:
+      # check the current working directory run by calling the id
+      - id: testing
+        # the friendly name
+        name: Test Local
+        # this has to be a single executable so use bash -c to run scripts
+        entry: bash -c "cd python && pwd"
+        language: system
+        verbose: true
+        pass_filenames: false
+        always_run: true
       - id: pytest
-        name: pytest
-        entry: pytest
+        name: Python Linting
+        entry: bash -c "cd python && pytest --timeout=600 --ignore=lambda_stage --doctest-modules --cov=."
+        #args: [--timeout=600, --ignore=lambda_stage, --doctest-modules, --cov=.]
         language: system
         pass_filenames: false
         always_run: true
+        verbose: true

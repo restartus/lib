@@ -393,6 +393,18 @@ if eval "[[ ! -v $lib_name ]]"; then
 		fi
 	}
 
+	# https://stackoverflow.com/questions/592620/how-can-i-check-if-a-program-exists-from-a-bash-script
+	# Usage is_command [command list]
+	# return 1 if any of these commands do not exist 
+	is_command() {
+		for cmd in "$@"; do
+			if ! command -v "$cmd" &> /dev/null;
+			then
+				return 1
+			fi
+		done
+	}
+
 	# determine the location of the stow subdirectory
 	# usage: util_full_version
 	# stdout returns the normalized full name os.major.minor...

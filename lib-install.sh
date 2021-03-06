@@ -544,7 +544,7 @@ if eval "[[ ! -v $lib_name ]]"; then
 	}
 
 	## npm install first checks for existance always does a global
-	## usage npm_install [any flag that begins with - like -g] package1,...
+	## usage npm_install [-f force sudo ] [any flag that begins with - like -g] package1,...
 	npm_install() {
 		if (($# < 1)); then
 			return 0
@@ -554,7 +554,7 @@ if eval "[[ ! -v $lib_name ]]"; then
 		# Look for and add for all flags beginning with a dash
 		while [[ $1 =~ ^- ]]; do
 			flags+=" $1"
-			if [[ $1 == -g ]]; then
+			if [[ $1 == -f ]]; then
 				use_sudo=sudo
 			fi
 			shift

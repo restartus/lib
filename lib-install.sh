@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 ##
 ##Installation works on either Mac OS X (Darwin) or Ubuntu
-## vi: se et ai sw=2 :
 ##
 
 # create a variable that is just the filename without an extension
@@ -457,6 +456,9 @@ if eval "[[ ! -v $lib_name ]]"; then
 	package_install() {
 		# find all the flags at the start
 		local flags=""
+        if (( $# < 1 )); then
+            return
+        fi
 		while [[ $1 =~ ^- ]]; do
 			flags+="$1 "
 			shift
@@ -514,6 +516,9 @@ if eval "[[ ! -v $lib_name ]]"; then
 	pip_install() {
 		local flags=""
 		local use_sudo=""
+		if (( $# < 1 )); then
+			return
+		fi
 		while [[ $1 =~ ^- ]]; do
 			# one flag is for us to force use of sudo
 			if [[ $1 == -f ]]; then
@@ -568,9 +573,7 @@ if eval "[[ ! -v $lib_name ]]"; then
 				# try this without sudo
 				# sudo npm install $flags $1
 				# shellcheck disable=SC2086
-				echo "use_sudo npm install $flags $package"
-				# shellcheck disable=SC2086
-				$use_sudo npm install $flags "$package"
+				eval $use_sudo npm install $flags "$package"
 			fi
 			shift
 		done

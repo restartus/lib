@@ -643,11 +643,12 @@ if eval "[[ ! -v $lib_name ]]"; then
 		if [[ ! $OSTYPE =~ darwin ]]; then return 0; fi
 		if (($# < 1)); then return 1; fi
 		local url="$1"
+		log_verbose "url is $1"
 		# http://stackoverflow.com/questions/965053/extract-filename-and-extension-in-bash
 		local file="${2:-${url##*/}}"
 		local dest="${3:-"$WS_DIR/cache"}"
 		local extension="${file##*.}"
-		echo "download_url_open file is $file dest is $dest and ext is $extension"
+		log_verbose "curl from $url to $dest/$file open $extension"
 		pushd "$dest" >/dev/null || return 1
 		download_url "$url" "$file" "$dest"
 		case "$extension" in
@@ -655,6 +656,7 @@ if eval "[[ ! -v $lib_name ]]"; then
 			sudo dpkg -i "$file"
 			;;
 		dmg)
+			log_verbose mounting "$file"
 			# do not mount if it has been already
 			if ! hdiutil info | grep -q "$file"; then
 				hdiutil attach "$file"

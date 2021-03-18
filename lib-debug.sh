@@ -26,6 +26,7 @@ if eval "[[ ! -v $lib_name ]]"; then
 	export DEBUG_SUSPEND=${DEBUG_SUSPEND:-false}
 	export DEBUGGING=${DEBUGGING:-false}
 	export VERBOSE=${VERBOSE:-false}
+	export TIMEIT="${TIMEIT:-false}"
 	export LOG_FLAGS=${LOGFLAGS:-""}
 
 	log_message() {
@@ -131,14 +132,25 @@ if eval "[[ ! -v $lib_name ]]"; then
 		fi
 	}
 
-	if "$DEBUGGING"; then
+	time_off() {
+		if $TIMEIT; then
+			set +x
+		fi
+	}
+
+	if $DEBUGGING; then
 		trace_on
 	fi
 
-	if "$VERBOSE"; then
+	if $VERBOSE; then
 		if [[ ! $LOG_FLAGS =~ -v ]]; then
 			LOG_FLAGS+=" -v"
 		fi
+	fi
+
+	if $TIMEIT; then
+		set -x
+		PS4='+ $(date "+%s.%N ($LINENO) ")'
 	fi
 
 	log_verbose "LOG_FLAGS set to $LOG_FLAGS"

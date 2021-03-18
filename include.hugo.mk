@@ -98,13 +98,27 @@ hugo-theme-sm:
 hugo-post:
 	$(HUGO_RUN) new posts/$
 
-## netlify: initialize netlify cli and link it to current repo
-# https://cli.netlify.com/getting-started
+# https://cli.netlify.com
+## netlify: run netlify local dev environment
 .PHONY: netlify
 netlify:
-	netlify logout
-	netlify login
+	netlify dev
+
+## netlify-deploy: force deployment without a push
+.PHONY: netlify-deploy
+netlify-deploy:
+	netlify deploy
+
+## netlify-build: build locally as a test
+.PHONY: netlify-build
+netlify-build:
+	netlify build
+
+## netlify-install: initialize netlify cli and link it to current repo
+# https://cli.netlify.com/getting-started
+.PHONY: netlify-install
+netlify-install:
+	@echo "assumes that you have done netlify login or netlify switch"
 	if [[ -d .netlify ]]; then netlify link; else netlify init; fi
 	netlify env:set GIT_LFS_ENABLED true
-
 	netlify open

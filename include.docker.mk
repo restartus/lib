@@ -1,6 +1,9 @@
 #
 ##
-## Docker additions for make files
+## Docker commands
+## Most of time push is not needed use Docker Hub automated builds instead
+## To initialize you must manually create the repo at hub.docker.com
+##
 # Remember makefile *must* use tabs instead of spaces so use this vim line
 # requires include.mk
 #
@@ -133,7 +136,7 @@ pull:
 # https://stackoverflow.com/questions/2214575/passing-arguments-to-make-run
 # Hack to allow parameters after run only works with GNU make
 # Note no indents allowed for ifeq
-# This commented out does not work if MAKECMDGOALS 
+# This commented out does not work if MAKECMDGOALS
 # include real targets like 'run'
 #ifeq (exec,$(firstword $(MAKECMDGOALS)))
 ## use the rest of the goals as arguments
@@ -151,9 +154,9 @@ pull:
 # -it this is almost always used together. commands like ls treat things
 #     differently if they are not readl terminals so this works like a shell
 # -dt runs but connects the stdin and stdout so logging works
-# 
+#
 # https://www.tecmint.com/run-docker-container-in-background-detached-mode/
-# -d run in detached mode so it runs in the background and output goes 
+# -d run in detached mode so it runs in the background and output goes
 #    to the terminal if -t is set or it goes to the log otherwise
 #  docker attach will reconnect it to the foreground.
 # -rm remove the container when it exits

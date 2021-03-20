@@ -40,19 +40,20 @@ repos:
       # https://github.com/jumanjihouse/pre-commit-hooks/issues/86
       #- id: markdownlint
       - id: shellcheck
-      # require shfmt be installed so use the dynamic install version
-      #- id: shfmt
-
-  - repo: local
-    hooks:
+      # require shfmt be installed
       - id: shfmt
-        name: shfmt
-        minimum_pre_commit_version: 2.4.0
-        language: golang
-        additional_dependencies: [mvdan.cc/sh/v3/cmd/shfmt@v3.2.2]
-        entry: shfmt
-        args: [ -w ]
-        types: [ shell ]
+
+  # from dan this fails with a go error
+  #- repo: local
+    #hooks:
+      #- id: shfmt
+        #name: shfmt
+        #minimum_pre_commit_version: 2.4.0
+        #language: golang
+        #additional_dependencies: [mvdan.cc/sh/v3/cmd/shfmt@v3.2.2]
+        #entry: shfmt
+        #args: [ -w ]
+        #types: [ shell ]
 
   # covidwa does not have of these standards so comment out
 

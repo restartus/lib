@@ -1,0 +1,106 @@
+---
+name: Scraper Run and Save HTML
+# https://jasonet.co/posts/scheduled-actions/
+# https://www.jeffgeerling.com/blog/2020/running-github-actions-workflow-on-schedule-and-other-events
+# https://futurestud.io/tutorials/github-actions-trigger-builds-on-schedule-cron
+on:
+  push:
+    branches:
+      - main
+      - rich-*
+  # schedule does not seem to be running only works against main
+  # https://stackoverflow.com/questions/63436541/github-action-workflow-schedule-not-working-on-non-default-branch
+  # https://stackoverflow.com/questions/65132563/why-is-github-actions-workflow-scheduled-with-cron-not-triggering-at-the-right-t
+  # The minimum is every five mintues
+  schedule:
+    # cron min(0-59) hour(0-23) day(1-31) month(1-12) day-of-week(0-6)
+    # use https://crontab.guru to generate cron strings
+    - cron: "*/15 * * * *"
+
+jobs:
+
+  scrape:
+    #runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
+    strategy:
+      # https://www.edwardthomson.com/blog/github_actions_6_fail_fast_matrix_workflows.html
+      fail-fast: false
+      matrix:
+        # https://ncorti.com/blog/howto-github-actions-build-matrix
+        python-version: [ 3.9 ]
+        # should not have an extension also uses as a branch name
+        scraper: [ SidsPharmacy ]
+
+    steps:
+      # checkout repo under $GITHUB_WORKSPACE
+      - name: Checkout action
+        uses: actions/checkout@v2
+        with:
+          lfs: true
+          submodules: recursive
+          # so on PRs we are not detached for
+          # https://github.com/stefanzweifel/git-auto-commit-action
+          ref: ${{ github.head_ref }}
+
+      # install latest python version
+      - name: Setup python
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Display Python version
+        run: python --version
+
+      - name: Cache pip
+        uses: actions/cache@v2
+        with:
+          # Ubuntu specific path
+          path: ~/.cache/pip
+          # https://github.com/actions/cache/blob/main/examples.md#python---pip
+          # See if there is a cache hit looking for the requirements.txt
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+            ${{ runner.os }}-
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f python/requirements.txt ]; then pip install -r python/requirements.txt; fi
+
+      # run the scrapers using matrix
+      # https://www.theserverside.com/blog/Coffee-Talk-Java-News-Stories-and-Opinions/GitHub-Actions-Secrets-Example-Token-Tutorial
+      - name: Run Scrapers
+        env:
+          API_SECRETWA: ${{ secrets.API_SECRETWA  }}
+        run: |
+          cd python
+          python ${{ matrix.scraper }}.py
+          git status
+
+      # https://github.com/marketplace/actions/create-branch
+      - name: Create a branch for saved HTML
+        uses: peterjgrainger/action-create-branch@v2.0.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          branch: data-${{ matrix.scraper }}
+
+      # https://github.com/stefanzweifel/git-auto-commit-action
+      # this needs a branch created first
+      - name: Save HTML into current branch
+        uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          commit_message: Save ${{ matrix.scraper }} data
+          branch: data-${{ matrix.scraper }}
+          commit_user_name: CovidWA Scraper Github Action
+          commit_user_email: info@covidwa.com
+          commit_author: Github Author <info@covidwa.com>
+
+      # assumes python in in the subdirectory ./python
+      #- name: Test with pytest
+        #run: |
+          #pip install pytest pytest-cov pytest-timeout
+          #cd python
+          #pytest --timeout=600 --cov=. --doctest-modules \
+            #--junitxml=junit/test-results.xml --cov-report=xml --cov-report=html

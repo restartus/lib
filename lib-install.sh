@@ -653,6 +653,7 @@ if eval "[[ ! -v $lib_name ]]"; then
 		# http://stackoverflow.com/questions/965053/extract-filename-and-extension-in-bash
 		local file="${2:-${url##*/}}"
 		local dest="${3:-"$WS_DIR/cache"}"
+		mkdir -p "$dest"
 		local extension="${file##*.}"
 		log_verbose "curl from $url to $dest/$file open $extension"
 		pushd "$dest" >/dev/null || return 1

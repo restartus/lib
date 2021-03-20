@@ -1,11 +1,10 @@
 ---
 # https://docs.github.com/en/actions/guides/building-and-testing-python
-name: Python Lint
+name: Base Lint
 
 on:
   push:
-    paths:
-      - 'python/**'
+  pull_request:
 
 jobs:
 
@@ -107,10 +106,3 @@ jobs:
           #yamllint $(find . -name "*.yaml" -o -name "*.yml")
           #echo running yamllint
           #yamllint .
-
-      # assumes python in in the subdirectory ./python
-      - name: Test with pytest
-        run: |
-          pip install pytest pytest-cov
-          cd python
-          pytest --cov=. --doctest-modules --junitxml=junit/test-results.xml --cov-report=xml --cov-report=html

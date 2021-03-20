@@ -8,6 +8,7 @@ on:
     branches:
       - main
       - rich-*
+  pull_request:
   # schedule does not seem to be running only works against main
   # https://stackoverflow.com/questions/63436541/github-action-workflow-schedule-not-working-on-non-default-branch
   # https://stackoverflow.com/questions/65132563/why-is-github-actions-workflow-scheduled-with-cron-not-triggering-at-the-right-t

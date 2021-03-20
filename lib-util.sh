@@ -220,6 +220,21 @@ if eval "[[ ! -v $lib_name ]]"; then
 		esac
 	}
 
+	# parse out the semantic to how many digits
+	# usage: semver -[1|2|3] how many -1 is major, -2 add minor, -3 add path
+	log_verbose "loaded util_semver"
+	util_semver() {
+		local fields="1,2,3"
+		if (($# > 0)); then
+			if [[ $1 == -1 ]]; then fields="1"; fi
+			if [[ $1 == -2 ]]; then fields="1,2"; fi
+		fi
+		# sed to get rid of anything strings after the third digit
+		# tr get rid of everything that is not a digit or a period with -c
+		sed -E 's/([0-9]+)\.([0-9]+).([0-9]+).*/\1.\2.\3/' |
+			tr -cd '[:digit:].' | cut -d '.' -f "$fields"
+	}
+
 	linux_distribution() {
 		if [[ $(uname) =~ Linux ]]; then
 			lsb_release -i | awk '{print $3}' | tr '[:upper:]' '[:lower:]'
@@ -395,11 +410,10 @@ if eval "[[ ! -v $lib_name ]]"; then
 
 	# https://stackoverflow.com/questions/592620/how-can-i-check-if-a-program-exists-from-a-bash-script
 	# Usage is_command [command list]
-	# return 1 if any of these commands do not exist 
+	# return 1 if any of these commands do not exist
 	is_command() {
 		for cmd in "$@"; do
-			if ! command -v "$cmd" &> /dev/null;
-			then
+			if ! command -v "$cmd" &>/dev/null; then
 				return 1
 			fi
 		done

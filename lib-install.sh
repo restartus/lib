@@ -57,6 +57,12 @@ if eval "[[ ! -v $lib_name ]]"; then
 		eval sudo apt-get upgrade "$output"
 	}
 
+	# usage: gem_install [ ruby packages ]
+	gem_install() {
+		if (($# < 1)); then return; fi
+		gem install "$@"
+	}
+
 	# usage: tap_install [ taps... ]
 	tap_install() {
 		for tap in "$@"; do
@@ -456,9 +462,9 @@ if eval "[[ ! -v $lib_name ]]"; then
 	package_install() {
 		# find all the flags at the start
 		local flags=""
-        if (( $# < 1 )); then
-            return
-        fi
+		if (($# < 1)); then
+			return
+		fi
 		while [[ $1 =~ ^- ]]; do
 			flags+="$1 "
 			shift
@@ -516,7 +522,7 @@ if eval "[[ ! -v $lib_name ]]"; then
 	pip_install() {
 		local flags=""
 		local use_sudo=""
-		if (( $# < 1 )); then
+		if (($# < 1)); then
 			return
 		fi
 		while [[ $1 =~ ^- ]]; do

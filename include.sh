@@ -75,12 +75,15 @@ then
             # maxdepth needs to be high enough for ws/git/user to find
             # ws/git/src/infra/lib
             local lib
+            #if $DEBUG; then echo "looking for $1"; fi
             lib="$(find "$WS_DIR" "$SCRIPT_DIR"/{.,..,../..,../../..} -maxdepth 7 \
                 -name mnt -prune -o -name "$1" -print -quit)"
+            #if $DEBUG; then echo "found $lib"; fi
             if [[ -n $lib ]]
             then
-            # shellcheck disable=SC1090
-            source "$lib"; fi
+                # shellcheck disable=SC1090
+                source "$lib"
+            fi
         shift; done
     }
     source_lib lib-debug.sh

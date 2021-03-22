@@ -46,16 +46,14 @@ pre-commit:
 	[[ -e .pre-commit-config.yaml ]] && $(RUN) pre-commit run --all-files || true
 
 
-WORKFLOWS ?= .github/workflows
 ## pre-commit-install: Install precommit
 .PHONY: pre-commit-install
 pre-commit-install:
 	if [[ -e .pre-commit-config.yaml ]]; then \
 		$(RUN) pre-commit install || true && \
-		if [[ ! -e $(WORKFLOWS) ]]; then \
-			mkdir -p "$(WORKFLOWS)" && cp lib/workflow.base.yaml "$(WORKFLOWS)" \
-		; fi \
+		mkdir -p .github/workflows \
 	; fi
+	@echo "copy the appropriate workflows from lib"
 
 ## git-lfs: installs git lfs
 .PHONY: git-lfs

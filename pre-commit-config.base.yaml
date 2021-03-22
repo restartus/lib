@@ -19,7 +19,9 @@ repos:
       - id: check-symlinks
       - id: check-toml
       - id: check-yaml
+      # https://github.com/pre-commit/pre-commit-hooks/blob/master/pre_commit_hooks/detect_aws_credentials.py
       - id: detect-aws-credentials
+        args: [--allow-missing-credentials]
       - id: detect-private-key
       - id: end-of-file-fixer
       - id: mixed-line-ending

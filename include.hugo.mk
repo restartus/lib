@@ -29,14 +29,14 @@ GIT_PATH ?= github.com/$(GIT_ORG)/$(name)
 
 ## export HUGO_ENV=docker: to run in docker
 ## unset HUGO_ENV: to run bare metal
-HUGO_ENV ?= 
+HUGO_ENV ?=
 ifeq ($(HUGO_ENV),docker)
 	HUGO_RUN = $(HUGO_DOCKER) $(HUGO_IMAGE)
 else
 	HUGO_RUN = hugo
 endif
 
-## 
+##
 
 
 ## hugo: make the site
@@ -79,7 +79,7 @@ hugo-theme:
 		echo "[[module.imports]]" >> config.toml; \
 		echo "path = \"$(HUGO_THEME_PATH)\"" >> config.toml; \
 	fi
-	@echo see $(HUGO_THEME_PATH)/exampleSite and copy 
+	@echo see $(HUGO_THEME_PATH)/exampleSite and copy
 
 ## hugo-mod: get latest go modules and add to repo
 .PHONY: hugo-mod

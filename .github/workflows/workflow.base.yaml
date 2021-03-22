@@ -46,17 +46,28 @@ jobs:
             ${{ runner.os }}-pip-
             ${{ runner.os }}-
 
-      # https://snapcraft.io/install/shfmt/ubuntu
-      - name: Install ubuntu dependencies for shfmt
-        run: |
-          sudo apt update
-          sudo apt install snapd
-          sudo snap install shfmt
-
       - name: Install python dependencies
         run: |
           python -m pip install --upgrade pip
           if [ -f python/requirements.txt ]; then pip install -r python/requirements.txt; fi
+
+
+      # https://snapcraft.io/install/shfmt/ubuntu
+      - name: Install ubuntu dependencies for shfmt and mdl
+        run: |
+          sudo apt update
+          sudo apt install snapd
+          sudo snap install shfmt mdl
+      # Not needed there is a snap package
+      # install dependencies for ruby gem mdl
+      # https://github.com/ruby/setup-ruby
+      #- name: Install ruby
+        #uses: ruby/setup-ruby@v1
+        #with:
+          #ruby-version: 3.0
+      #- name: Install Gems
+        #run: |
+          #gem install mdl
 
       # https://github.com/pre-commit/action
       - name: Run Pre-commit

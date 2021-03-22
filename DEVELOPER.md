@@ -78,10 +78,10 @@ be found [here](https://github.com/restartus/data/blob/lucas-doc/README.md).
 Currently, this repo's directory layout has these major areas:
 
 - [extern](extern). This contains several GitHub repos as submodules. The most
-important of these are [covid-projection](extern/covid-projection), which
-houses the source code for the Restart Partners model, and
-[data](extern/data), which houses all of the data that we use. More
-information on how we use Git submodules can be found [here](#git-submodules)
+  important of these are [covid-projection](extern/covid-projection), which
+  houses the source code for the Restart Partners model, and
+  [data](extern/data), which houses all of the data that we use. More
+  information on how we use Git submodules can be found [here](#git-submodules)
 - [lib](lib) Developer tools, Makefiles, and scripts for environment control.
 - [bin](bin). Mostly bash scripts for common, repetitive tasks that can be automated.
 - [user](user). Contains various experimental code.
@@ -106,10 +106,10 @@ You'll only have to do these steps once :)
    OpenSSH public/private rsa key pair (and make sure you know your
    passphrase).  If you don't recall your passphrase, see
    [here](https://docs.github.com/en/github/authenticating-to-github/recovering-your-ssh-key-passphrase).
-2. Install the Gitpod chrome browser extension located
+1. Install the Gitpod chrome browser extension located
    [here](https://chrome.google.com/webstore/detail/gitpod-dev-environments-i/dodmmooeoklaejobgleioelladacbeki/related).
-3. Make a gitpod account through using your Github account [here](https://gitpod.io/login/).
-4. Navigate to [here](https://gitpod.io/settings/) and do the following:
+1. Make a gitpod account through using your Github account [here](https://gitpod.io/login/).
+1. Navigate to [here](https://gitpod.io/settings/) and do the following:
   a. Create an environment variable by clicking the add variable button.
   b. Name this variable `SSH_PUBLIC_KEY` and copy and paste your rsa public key
   in the value field.
@@ -121,12 +121,12 @@ You'll only have to do these steps once :)
   reason for doing this is that Gitpod's textbox removes newline characters.
   Thus, in each start of a workspace, the key is parsed and reformatted to be
   in the expected OpenSSH format.
-5. Navigate in your browser to [restart/src](https://github.com/restartus/src).
-6. Click on the green Gitpod button that appears in between the Code button and
+1. Navigate in your browser to [restart/src](https://github.com/restartus/src).
+1. Click on the green Gitpod button that appears in between the Code button and
    About section toward the top right (refresh page if it is not present).
-7. Login with Github and authorize gitpod.
-8. Grant access and authorize once again if prompted.
-9. A new tab will open with Gitpod's Theia IDE. It will likely take ~1 min to
+1. Login with Github and authorize gitpod.
+1. Grant access and authorize once again if prompted.
+1. A new tab will open with Gitpod's Theia IDE. It will likely take ~1 min to
    build. Once it has finished, you should have a fully capable development
    environment set up!
 
@@ -239,15 +239,15 @@ Here is a typical development scenario involving new dependencies:
 
 1. You create a workspace from the master branch of src.
 
-2. You create a new branch from inside this workspace.
+1. You create a new branch from inside this workspace.
 
-3. You add the dependencies you want to the .gitpod.Dockerfile on
+1. You add the dependencies you want to the .gitpod.Dockerfile on
    this branch.
 
-4. You add and commit the changes to the .gitpod.Dockerfile and
+1. You add and commit the changes to the .gitpod.Dockerfile and
    push them to origin/your-new-branch.
 
-5. You then create a new workspace from that branch, and voila,
+1. You then create a new workspace from that branch, and voila,
    you have your added dependencies and are ready to start working
    with them.
 
@@ -812,25 +812,25 @@ focus on architectural and other more important aspects of your PR than
 things like poor code practice etc.
 
 - Review any comments that have been made by the issuer. Doing so will provide
-context likely needed for the review process. The history of the PR and any
-comments that have been made will appear under the "Conversation" tab of the
-PR's github webpage.
+  context likely needed for the review process. The history of the PR and any
+  comments that have been made will appear under the "Conversation" tab of the
+  PR's github webpage.
 - Go through the PR's commits to see an overview of the changes that have
-been made. Make sure that there aren't too many commits/messages, and if
-there are, ask the issuer to do an interactive rebase to squash and fixup
-commits accordingly. Unsurprisingly, the PR's commits can be viewed under
-the "Commits" tab.
+  been made. Make sure that there aren't too many commits/messages, and if
+  there are, ask the issuer to do an interactive rebase to squash and fixup
+  commits accordingly. Unsurprisingly, the PR's commits can be viewed under
+  the "Commits" tab.
 - Next, ensure that lints and any other checks have succeeded/passed.
-This can be viewed under the "Checks" tab. Detailed breakdowns of a check
-can be viewed by simply clicking on it.
+  This can be viewed under the "Checks" tab. Detailed breakdowns of a check
+  can be viewed by simply clicking on it.
 - If all looks good so far, you must then review the file changes
-for any remaining deficiencies in code, design, etc. You can add comments
-to specific lines in files by hovering your mouse over the plus sign
-at the left of each line. These comments are how you can request the
-issuer to make any any changes that are necessary before merging the PR into
-master.
+  for any remaining deficiencies in code, design, etc. You can add comments
+  to specific lines in files by hovering your mouse over the plus sign
+  at the left of each line. These comments are how you can request the
+  issuer to make any any changes that are necessary before merging the PR into
+  master.
 - Finally, if everying checks out you can rebase and merge the PR's branch
-into master.
+  into master.
 
 #### Merging Pull Requests as a Maintainer
 
@@ -1149,13 +1149,13 @@ When creating an issue, you should always fill out all the fields:
 
 - Assignees: You should usually assign an issue to yourself.
 - Labels: Add labels to describe the issue ("bug" if something needs fixing,
-"enhancement" for a new feature, etc.)
+  "enhancement" for a new feature, etc.)
 - Projects: There is only one project currently. Assign it to the issue then click
-the dropdown to choose either "In progress" if you're working on it today or "To
-do" to leave it on the backlog. We normally want to finish things and not leave
-much hanging.
+  the dropdown to choose either "In progress" if you're working on it today or "To
+  do" to leave it on the backlog. We normally want to finish things and not leave
+  much hanging.
 - Milestone: You should assign a milestone to each issue, often the most recent
-one.
+  one.
 
 ## Google Foo
 
@@ -1172,7 +1172,5 @@ go with said solution and halt - you've solved your problem.
 Steps:
 
 1. Search for the problem directly on Google.
-
-2. Search github directly for the problem ([here](https://github.com/search)).
-
-3. Search on main or community website of the source of your problem.
+1. Search github directly for the problem ([here](https://github.com/search)).
+1. Search on main or community website of the source of your problem.

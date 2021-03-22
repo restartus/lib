@@ -6,26 +6,32 @@
 ---
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
+    # only language independent hooks
     rev: v3.4.0
     hooks:
       - id: check-added-large-files
       - id: check-case-conflict
-      - id: check-builtin-literals
       - id: check-executables-have-shebangs
       - id: check-json
+      # do not run this since we do include.sh from elsewhere
+      #- id: check-symlinks
       - id: check-merge-conflict
+      - id: check-toml
+      - id: check-xml
       - id: check-yaml
         args: [--allow-multiple-documents]
-      - id: check-symlinks
-      - id: check-toml
-      - id: check-yaml
+      - id: destroyed-symlinks
       # https://github.com/pre-commit/pre-commit-hooks/blob/master/pre_commit_hooks/detect_aws_credentials.py
       - id: detect-aws-credentials
         args: [--allow-missing-credentials]
       - id: detect-private-key
       - id: end-of-file-fixer
+      - id: forbid-new-submodules
       - id: mixed-line-ending
+      - id: no-commit-to-branch
+      - id: pretty-format-json
       - id: trailing-whitespace
+
   - repo: https://github.com/jumanjihouse/pre-commit-hooks
     rev: 2.1.5
     hooks:

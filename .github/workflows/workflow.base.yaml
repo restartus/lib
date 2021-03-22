@@ -15,7 +15,8 @@ jobs:
     strategy:
       matrix:
         # 3.7 will not run with the current requirements.txt pinning
-        python-version: [ 3.8, 3.9 ]
+        # we do not need matrix that is in python version
+        python-version: [ 3.9 ]
 
     steps:
       # checkout repo under $GITHUB_WORKSPACE

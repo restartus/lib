@@ -22,8 +22,9 @@ lib_name="$(basename "${BASH_SOURCE[0]}")"
 lib_name="${lib_name%.*}"
 # dashes are not allowed in bash variable names so make them underscores
 lib_name=${lib_name//-/_}
-echo "$lib_name"
-echo "${BASH_SOURCE[*]}"
+#debugging
+#echo "$lib_name"
+#echo "${BASH_SOURCE[*]}"
 # This is how to create a pointer by reference in bash so
 # it checks for the existance of the variable named in $lib_name
 # note how we use the escaped $ to get the reference

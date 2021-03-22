@@ -1,8 +1,6 @@
 #
 ##
-## Docker commands
-## Most of time push is not needed use Docker Hub automated builds instead
-## To initialize you must manually create the repo at hub.docker.com
+## Docker command (uses docker-compose.yaml if found)
 ##
 # Remember makefile *must* use tabs instead of spaces so use this vim line
 # requires include.mk
@@ -120,11 +118,15 @@ docker_run = bash -c ' \
 	sleep 4; \
 	docker logs $(container)-$$((last+1))'
 
-## stop: halts all running containers
+## stop: halts all running containers (deprecated)
 .PHONY: stop
 stop:
-	@$(for_containers) $(container) stop > /dev/null
-	@$(for_containers) $(container) "rm -v" > /dev/null
+	if [[ -e docker-compose.yml ]]; then \
+		docker-compose down \
+	; else \
+		@$(for_containers) $(container) stop > /dev/null && \
+		@$(for_containers) $(container) "rm -v" > /dev/null \
+	; fi
 
 ## pull: pulls the latest image
 .PHONY: pull
@@ -165,7 +167,11 @@ pull:
 ## run: Run the docker container in the background (for web apps like Jupyter)
 .PHONY: run
 run: stop
-	$(docker_run) -dt $(cmd)
+	if [[ -e docker-compose.yml ]]; then \
+		docker-compose up \
+	; else \
+		$(docker_run) -dt $(cmd) \
+	; fi
 
 ## exec: Run docker in foreground and then exit (treat like any Unix command)
 ##       if you need to pass arguments down then use the form

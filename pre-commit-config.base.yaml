@@ -30,6 +30,7 @@ repos:
       - id: mixed-line-ending
       - id: no-commit-to-branch
       - id: pretty-format-json
+        args: [ --autofix ]
       - id: trailing-whitespace
 
   - repo: https://github.com/jumanjihouse/pre-commit-hooks

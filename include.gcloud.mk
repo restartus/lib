@@ -13,9 +13,11 @@ CLUSTER ?= $(USER)
 # project id's must be 6-30 characters
 PROJECTS ?= netdrones net-rich net-lucas net-guy
 # continaer.googleapis.com - GKE
-SERVICES ?= container.googleapis.com
+SERVICES ?= container.googleapis.com artifactregistry.googleapis.com cloudbuild.googleapis.com
 DEFAULT_PROJECT ?= netdrones
 BILLING ?= Mercuries - Zazmic
+# Docker repo name
+REPO ?= $$(basename $(PWD))
 # note the organization is the same as the Google Workspace primary domain
 # https://stackoverflow.com/questions/43255794/edit-google-cloud-organization-name
 ORG ?= netdron.es
@@ -32,32 +34,45 @@ ORG ?= netdron.es
 # https://linuxhandbook.com/shell-using/
 .PHONY: projects
 projects:
-	echo $$0
 	for project in $(PROJECTS); do \
 		if ! gcloud projects list --format="value(projectId)" | grep -q "^$$project$$"; then \
 			gcloud projects create "$$project" \
 				--organization="$$(gcloud organizations describe $(ORG) --format='value(name)' | cut -d / -f 2)" \
 		; fi ; \
+		echo done \
 	; done
-.PHONY: billing
-billing:
-		if [[ $$(gcloud beta billing projects describe $$project --format='value(billingEnabled)') =~ False ]]; then \
-			gcloud billing projects link $$project \
-				--billing="$$(gcloud beta billing accounts list --format='value(name)' --filter='displayName="$(BILLING)"')" \
-		; fi
+
 
 .PHONY: init
 init:
-
+	BILLING_ACCOUNT=$$(gcloud beta billing accounts list --format='value(name)' --filter='displayName="$(BILLING)"') && \
+	echo "Billing $$BILLING_ACCOUNT" && \
+	for project in $(PROJECTS); do \
+		if ! gcloud projects list --format="value(projectId)" | grep -q "^$$project$$"; then \
+			gcloud projects create "$$project" \
+				--organization="$$(gcloud organizations describe $(ORG) --format='value(name)' | cut -d / -f 2)" \
+		; fi ; \
+		if [[ $$(gcloud beta billing projects describe $$project --format='value(billingEnabled)') =~ False ]]; then \
+			gcloud beta billing projects link $$project \
+				--billing-account="$$BILLING_ACCOUNT" \
+		; fi ; \
+		for service in $(SERVICES); do \
+			gcloud services enable $$service --project=$$project \
+		; done ; \
+		if ! gsutil ls "gs://$$project.$(ORG)"; then \
+			gsutil mb "gs://$$project.$(ORG)" \
+		; fi ; \
+	done
 	if (( $$(gcloud config configurations list --format='value(name)' | wc -l) < 1)); then \
 		gcloud init && \
-		gcloud config set compute/region=$(REGION) && \
-		gcloud config set core/project=$(DEFAULT_PROJECT) \
-	; fi
-	for service in $(SERVICES); do\
-		gcloud services enable $$service \
-	; done
+		gcloud config set compute/region $(REGION) && \
+		gcloud config set core/project $(DEFAULT_PROJECT) && \
+		gcloud config set artifacts/location $(REGION) \
+	; fi ; \
 	gcloud auth configure-docker
+
+## bucket: Create initial buckets
+.PHONY: bucket
 
 ## config: Get default config
 .PHONY: config
@@ -92,3 +107,24 @@ autopilot:
 		--project $(DEFAULT_PROJECT)
 	kubectl cluster-info
 	kubectl get nodes
+
+# https://cloud.google.com/build/docs/quickstart-build
+# https://cloud.google.com/sdk/gcloud/reference/topic/filters
+# https://medium.com/google-cloud/gcr-io-tips-tricks-d80b3c67cb64
+## build: Docker image cloud build to gcr.io or internally to $(REGION)-docker.pkg.dev
+.PHONY: build
+build:
+	if ! gcloud artifacts repositories list --format="value(name)" 2>/dev/null | grep -q "^$(REPO)$$"; then \
+		gcloud artifacts repositories create "$(REPO)" --repository-format=docker \
+	; fi
+	gcloud artifacts repositories list
+	PROJECT="$$(gcloud config get-value project)" && \
+			gcloud builds submit --tag "$(REGION)-docker.pkg.dev/$$PROJECT/$(REPO)/$(REPO)" && \
+			gcloud builds submit -t gcr.io/$$PROJECT/$(REPO) .
+
+# https://www.edureka.co/community/58349/mounting-google-cloud-storage-bucket-gke-pod-persistent-disk
+# https://karlstoney.com/2017/03/01/fuse-mount-in-kubernetes/
+## fuse: Connect a deployment to Google Cloud Storage via Fuse
+.PHONY: fuse
+fuse:
+	echo TBD

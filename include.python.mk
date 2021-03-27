@@ -1,4 +1,6 @@
-# Model user commands:
+##
+## Python Commands
+## -------------------
 # Configure by setting PIP for pip packages and optionally name
 # requires include.mk
 #

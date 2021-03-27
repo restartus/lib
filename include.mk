@@ -1,6 +1,7 @@
 #
 ##
-## Base commands: not language specific
+## Base commands
+## -------------
 #
 TAG ?= v1
 # https://www.gnu.org/software/make/manual/make.html#Flavors
@@ -66,11 +67,6 @@ git-lfs:
 repo-install: git-lfs pre-commit-install
 	$(RUN) for repo in bin lib docker; do git submodule add git@github.com:$(GIT_ORG)/$$repo; done
 	$(RUN) git submodule update --init --recursive --remote
-
-## gcloud: push up to Google Cloud
-.PHONY: gcloud
-gcloud:
-	gcloud projects list
 
 ## git: createe a git repo
 .PHONY: git

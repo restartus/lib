@@ -1,3 +1,6 @@
+##
+## Hugo Commands
+## -----
 SHELL = bash
 
 ##

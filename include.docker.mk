@@ -1,7 +1,7 @@
 #
 ##
 ## Docker command (uses docker-compose.yaml if found)
-##
+## -------
 # Remember makefile *must* use tabs instead of spaces so use this vim line
 # requires include.mk
 #

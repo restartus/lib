@@ -5,8 +5,9 @@
 #
 TAG ?= v1
 # https://www.gnu.org/software/make/manual/make.html#Flavors
-# Use simple expansion for most
-SHELL ?= /bin/bash
+# Use simple expansion for most and not ?= since default is /bin/bash
+# which is bash v3 for MacOS
+SHELL := /usr/bin/env bash
 GIT_ORG ?= richtong
 SUBMODULE_HOME ?= "$(HOME)/ws/git/src"
 NEW_REPO ?=

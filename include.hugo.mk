@@ -1,8 +1,8 @@
 ##
 ## Hugo Commands
 ## -----
-SHELL = bash
 
+SHELL := /usr/bin/env bash
 ##
 HUGO_REPO ?= richt
 # kalkegg works

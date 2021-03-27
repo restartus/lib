@@ -10,6 +10,7 @@
 # YOu will want to change these depending on the image and the org
 repo ?= "richt"
 name ?= "$$(basename $(PWD))"
+SHELL := /usr/bin/env bash
 
 DOCKER_USER ?= docker
 DEST_DIR ?= /home/$(DOCKER_USER)/data
@@ -19,9 +20,6 @@ SRC_DIR ?= $(CURDIR)/data
 # volumes ?= -v "$$(readlink -f "./data"):$(DEST_DIR)"
 volumes ?= --mount "type=bind,source=$(SRC_DIR),target=$(DEST_DIR)"
 flags ?=
-
-# https://stackoverflow.com/questions/589276/how-can-i-use-bash-syntax-in-makefile-targets
-SHELL := /bin/bash
 
 Dockerfile ?= Dockerfile
 #

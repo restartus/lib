@@ -15,6 +15,7 @@
 #
 #
 
+SHELL := /usr/bin/env bash
 ## The bare metal python and conda work is deprecated, please use pipenv:
 ## requirements: Freeze Python requirements in bare machine (deprecated use pipenv)
 .PHONY: requirements

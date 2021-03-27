@@ -13,7 +13,7 @@
 # defaults use to add comments when running make help
 #
 FLAGS ?=
-SHELL ?= /bin/bash
+SHELL := /usr/bin/env bash
 # does not work the excluded directories are still listed
 # https://www.theunixschool.com/2012/07/find-command-15-examples-to-exclude.html
 # exclude := -type d \( -name extern -o -name .git \) -prune -o

@@ -17,8 +17,8 @@
 # defaults use to add comments when running make help
 #
 # https://stackoverflow.com/questions/589276/how-can-i-use-bash-syntax-in-makefile-targets
-SHELL ?= /bin/bash
 airflow_data ?= $(PWD)
+SHELL := /usr/bin/env bash
 PIP += apache-airflow mysqlclient datetime tables h5py
 PIP_DEV += neovim
 PYTHON = 3.7

@@ -222,7 +222,7 @@ if eval "[[ ! -v $lib_name ]]"; then
 
 	# parse out the semantic to how many digits
 	# usage: semver -[1|2|3] how many -1 is major, -2 add minor, -3 add path
-	log_verbose "loaded util_semver"
+	# log_verbose "loaded util_semver"
 	util_semver() {
 		local fields="1,2,3"
 		if (($# > 0)); then

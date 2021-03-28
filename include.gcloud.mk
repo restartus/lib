@@ -11,7 +11,8 @@ REGION ?= us-west1
 ZONE= ?= $(REGION)-b
 CLUSTER ?= $(USER)
 # project id's must be 6-30 characters
-PROJECTS ?= netdrones net-rich net-lucas net-guy
+PROJECT_PREFIX ?= net
+PROJECTS ?= rich lucas guy
 # continaer.googleapis.com - GKE
 SERVICES ?= container.googleapis.com artifactregistry.googleapis.com cloudbuild.googleapis.com
 DEFAULT_PROJECT ?= netdrones
@@ -30,37 +31,30 @@ ORG ?= netdron.es
 # https://cloud.google.com/blog/products/it-ops/filtering-and-formatting-fun-with
 # https://medium.com/@raigonjolly/cheat-sheets-gcloud-bq-gsutil-kubectl-for-google-cloud-associate-certificate-4093b8977a01
 # https://cloud.google.com/sdk/gcloud/reference/topic/filters
-## init: Gloud init sets the login and your default zones and project
 # https://linuxhandbook.com/shell-using/
-.PHONY: projects
-projects:
-	for project in $(PROJECTS); do \
-		if ! gcloud projects list --format="value(projectId)" | grep -q "^$$project$$"; then \
-			gcloud projects create "$$project" \
-				--organization="$$(gcloud organizations describe $(ORG) --format='value(name)' | cut -d / -f 2)" \
-		; fi ; \
-		echo done \
-	; done
-
-
+# https://cloud.google.com/resource-manager/docs/creating-managing-projects
+# project id's must be unique across the google cloud
+## init: Gloud init sets the login and your default zones and project
 .PHONY: init
 init:
 	BILLING_ACCOUNT=$$(gcloud beta billing accounts list --format='value(name)' --filter='displayName="$(BILLING)"') && \
 	echo "Billing $$BILLING_ACCOUNT" && \
-	for project in $(PROJECTS); do \
+	for proj_base in $(PROJECTS); do \
+		project="$(PROJECT_PREFIX)-$$proj_base" && \
 		if ! gcloud projects list --format="value(projectId)" | grep -q "^$$project$$"; then \
+			echo "creating $$project" ; \
 			gcloud projects create "$$project" \
 				--organization="$$(gcloud organizations describe $(ORG) --format='value(name)' | cut -d / -f 2)" \
 		; fi ; \
 		if [[ $$(gcloud beta billing projects describe $$project --format='value(billingEnabled)') =~ False ]]; then \
-			gcloud beta billing projects link $$project \
+			gcloud beta billing projects link "$$project" \
 				--billing-account="$$BILLING_ACCOUNT" \
 		; fi ; \
 		for service in $(SERVICES); do \
-			gcloud services enable $$service --project=$$project \
+			gcloud services enable $$service --project="$$project" \
 		; done ; \
-		if ! gsutil ls "gs://$$project.$(ORG)"; then \
-			gsutil mb "gs://$$project.$(ORG)" \
+		if ! gsutil ls "gs://$$proj_base.$(ORG)"; then \
+			gsutil mb "gs://$$proj_base.$(ORG)" \
 		; fi ; \
 	done
 	if (( $$(gcloud config configurations list --format='value(name)' | wc -l) < 1)); then \

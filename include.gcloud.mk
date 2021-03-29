@@ -57,16 +57,18 @@ init:
 			gsutil mb "gs://$$proj_base.$(ORG)" \
 		; fi ; \
 	done
-	if (( $$(gcloud config configurations list --format='value(name)' | wc -l) < 1)); then \
+
+#there is always a default but it is unpopulated
+#if (( $$(gcloud config configurations list --format='value(name)' | wc -l) < 1)); then \
+## login: Create initial buckets
+.PHONY: login
+login:
+	if ! gcloud auth list | grep -q "No credentialed accounts"; then \
 		gcloud init && \
 		gcloud config set compute/region $(REGION) && \
 		gcloud config set core/project $(DEFAULT_PROJECT) && \
 		gcloud config set artifacts/location $(REGION) \
-	; fi ; \
-	gcloud auth configure-docker
-
-## bucket: Create initial buckets
-.PHONY: bucket
+	; fi
 
 ## config: Get default config
 .PHONY: config

@@ -34,9 +34,9 @@ ORG ?= netdron.es
 # https://linuxhandbook.com/shell-using/
 # https://cloud.google.com/resource-manager/docs/creating-managing-projects
 # project id's must be unique across the google cloud
-## init: Gloud init sets the login and your default zones and project
-.PHONY: init
-init:
+## org-init: Gloud init sets the organziation, its projects and bllling up
+.PHONY: org-init
+org-init:
 	BILLING_ACCOUNT=$$(gcloud beta billing accounts list --format='value(name)' --filter='displayName="$(BILLING)"') && \
 	echo "Billing $$BILLING_ACCOUNT" && \
 	for proj_base in $(PROJECTS); do \
@@ -60,9 +60,9 @@ init:
 
 #there is always a default but it is unpopulated
 #if (( $$(gcloud config configurations list --format='value(name)' | wc -l) < 1)); then \
-## login: Create initial buckets
-.PHONY: login
-login:
+## init: Initialize for a new user
+.PHONY: init
+init:
 	if ! gcloud auth list | grep -q "No credentialed accounts"; then \
 		gcloud init && \
 		gcloud config set compute/region $(REGION) && \
@@ -70,17 +70,18 @@ login:
 		gcloud config set artifacts/location $(REGION) \
 	; fi
 
-## config: Get default config
-.PHONY: config
-config:
+## list: List the current Get default config
+# these are long lists of active regions and zones
+#gcloud compute regions list
+#gcloud compute zones list
+.PHONY: list
+list:
 	gcloud config configurations list
 	gcloud config list
 	gcloud config get-value compute/region
 	gcloud config get-value compute/zone
 	gcloud config get-value core/account
 	gcloud config get-value core/project
-	gcloud compute regions list
-	gcloud compute zones list
 
 ## status: Get the currents status of running objects
 .PHONY: status

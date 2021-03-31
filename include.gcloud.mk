@@ -16,6 +16,7 @@ PROJECTS ?= rich lucas guy
 # continaer.googleapis.com - GKE
 SERVICES ?= container.googleapis.com artifactregistry.googleapis.com cloudbuild.googleapis.com
 DEFAULT_PROJECT ?= netdrones
+DEFAULT_USER ?= rich
 BILLING ?= Mercuries - Zazmic
 # Docker repo name
 REPO ?= $$(basename $(PWD))
@@ -66,7 +67,7 @@ init:
 	if ! gcloud auth list | grep -q "No credentialed accounts"; then \
 		gcloud init && \
 		gcloud config set compute/region $(REGION) && \
-		gcloud config set core/project $(DEFAULT_PROJECT) && \
+		gcloud config set project $(DEFAULT_PROJECT) && \
 		gcloud config set artifacts/location $(REGION) \
 	; fi
 
@@ -82,6 +83,46 @@ list:
 	gcloud config get-value compute/zone
 	gcloud config get-value core/account
 	gcloud config get-value core/project
+	gcloud compute accelerator-types list
+	gcloud compute images list
+	gcloud compute machine-types list
+
+## workstation: Create a linux gpu enable station
+# https://cloud.google.com/compute/docs/gpus
+.PHONY: workstation
+workstation:
+	gcloud compute instances create ws-$(DEFAULT_USER) \
+		--machine-type n1-standard-2
+		--accelerator type=nvidia-tesla-k80,count=1 \
+		--can-ip-forward \
+		--maintenance-policy TERMINATE \
+		--restart-on-failure
+		--tags "$(DEFAULT_USER)" \
+		--image-project ubuntu-os-cloud \
+		--image-family ubuntu-2004-lts \
+		--boot-disk-size 100
+
+## service: Create a service account
+# https://cloud.google.com/sdk/gcloud/reference/auth/activate-service-account
+# https://cloud.google.com/iam/docs/creating-managing-service-accounts
+.PHONY: service
+service:
+	SERVICE="$(PROJECT_PREFIX)-$(DEFAULT_USER)-service" && \
+	echo $$SERVICE && \
+	EMAIL="$$SERVICE@$(DEFAULT_PROJECT).iam.gserviceaccount.com" && \
+	echo $$EMAIL && \
+	if ! gcloud iam service-accounts list --format="value(name)" | grep $$SERVICE; then \
+		echo "Create $$SERVICE" && \
+		gcloud iam service-accounts create $$SERVICE \
+			--description="Service Account for $(DEFAULT_USER)" && \
+		gcloud projects add-iam-policy-binding $(DEFAULT_PROJECT) \
+			--member="serviceAccount:$$EMAIL" \
+			--role=roles/compute.osLogin \
+	; fi && \
+	if ! [[ -e $$SERVICE.key.json ]]; then \
+		gcloud iam service-accounts keys create $$SERVICE.key.json --iam-account=$$EMAIL \
+	; fi 
+	#gcloud auth activate-service-account 
 
 ## status: Get the currents status of running objects
 .PHONY: status
@@ -91,9 +132,9 @@ status:
 
 # https://cloud.google.com/kubernetes-engine/docs/how-to/creating-an-autopilot-cluster
 # https://www.marcolancini.it/2021/blog-gke-autopilot/
-## autopilot: Creates a GKE autopilot cluster
-.PHONY: autopilot
-autopilot:
+## gke: Creates a GKE autopilot cluster
+.PHONY: gke
+gke:
 	if ! gcloud container clusters list --format="value(name)" | grep -q "$(DEFAULT_PROJECT)"; then \
 		gcloud container clusters create-auto $(CLUSTER) \
 			--region $(REGION) \

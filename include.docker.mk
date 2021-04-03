@@ -1,6 +1,6 @@
 #
 ##
-## Docker command (uses docker-compose.yaml if found)
+## Docker command v2 uses docker-compose if docker_compose.yaml exists
 ## -------
 # Remember makefile *must* use tabs instead of spaces so use this vim line
 # requires include.mk
@@ -11,7 +11,7 @@
 repo ?= "richt"
 name ?= "$$(basename $(PWD))"
 SHELL := /usr/bin/env bash
-
+DOCKER_COMPOSE_YML ?= docker-compose.yml
 DOCKER_USER ?= docker
 DEST_DIR ?= /home/$(DOCKER_USER)/data
 # https://stackoverflow.com/questions/18136918/how-to-get-current-relative-directory-of-your-makefile
@@ -62,18 +62,28 @@ docker_flags ?= --build-arg "DOCKER_USER=$(DOCKER_USER)" \
 
 .PHONY: docker
 docker: $(Dockerfile)
-	docker build --pull \
-				$(docker_flags) \
-				 -f "$(Dockerfile)" \
-				 -t "$(image)" \
-				 $(build_path)
-	docker tag $(image) $(image):$$(git rev-parse HEAD)
-	docker push $(image)
+	if [[ -r  "$(DOCKER_COMPOSE_YML)" ]]; then \
+		docker-compose -f $(DOCKER_COMPOSE_YML) build --pull \
+					$(docker_flags); \
+		docker-compose push; \
+	else \
+		docker build --pull \
+					$(docker_flags) \
+					 -f "$(Dockerfile)" \
+					 -t "$(image)" \
+					 $(build_path) ; \
+		docker tag $(image) $(image):$$(git rev-parse HEAD) ; \
+		docker push $(image) ;\
+	fi
 
 ## docker-lint: run the linter against the docker file
 .PHONY: docker-lint
 docker-lint: $(Dockerfile)
-	dockerfilelint $(Dockerfile)
+	if [[ -r $((DOCKER_COMPOSE_YML)) ]]; then \
+		docker-compose -f "$(DOCKER_COMPOSE_YML)" config; \
+	else \
+		dockerfilelint $(Dockerfile); \
+	fi
 
 ## docker-test: run tests for pip file
 .PHONY: dockertest
@@ -86,17 +96,27 @@ docker-test:
 .PHONY: push
 push:
 	# need to push and pull to make sure the entire cluster has the right images
-	docker push $(image)
+	if [[ -r $(DOCKER_COMPOSE_YML) ]]; then \
+		docker-compuse -f "$(DOCKER_COMPOSE_YML)" push; \
+	else \
+		docker push $(image); \
+	fi
 
 # for those times when we make a change in but the Dockerfile does not notice
 # In the no cache case do not pull as this will give you stale layers
 ## no-cache: build docker image with no cache
 .PHONY: no-cache
 no-cache: $(Dockerfile)
-	docker build --pull --no-cache \
-		$(docker_flags) \
-		--build-arg NB_USER=$(DOCKER_USER) -f $(Dockerfile) -t $(image) $(build_path)
-	docker push $(image)
+	if [[ -e $(DOCKER_COMPOSE_YML) ]]; then \
+		docker-compose -f "$(DOCKER_COMPOSE_YML)" build \
+			$(docker_flags) \
+			--build-arg NB_USER=$(DOCKER_USER); \
+	else \
+		docker build --pull --no-cache \
+			$(docker_flags) \
+			--build-arg NB_USER=$(DOCKER_USER) -f $(Dockerfile) -t $(image) $(build_path); \
+		docker push $(image); \
+	fi
 
 # bash -c means the first argument is run and then the next are set as the $1,
 # to it and not that you use awk with the \$ in double quotes
@@ -119,8 +139,8 @@ docker_run = bash -c ' \
 ## stop: halts all running containers (deprecated)
 .PHONY: stop
 stop:
-	if [[ -e docker-compose.yml ]]; then \
-		docker-compose down \
+	if [[ -r $(DOCKER_COMPOSE_YML) ]]; then \
+		docker-compose -f "$(DOCKER_COMPOSE_YML)" down \
 	; else \
 		@$(for_containers) $(container) stop > /dev/null && \
 		@$(for_containers) $(container) "rm -v" > /dev/null \
@@ -129,7 +149,11 @@ stop:
 ## pull: pulls the latest image
 .PHONY: pull
 pull:
-	docker pull $(image)
+	if [[ -r $(DOCKER_COMPOSE_YML) ]]; then \
+		docker-compose -f "$(DOCKER_COMPOSE_YML)" pull; \
+	else \
+		docker pull $(image); \
+	fi
 
 ## run [args]: stops all the containers and then runs in the background
 ##             if there are flags than to a make -- run --flags [args]
@@ -165,8 +189,8 @@ pull:
 ## run: Run the docker container in the background (for web apps like Jupyter)
 .PHONY: run
 run: stop
-	if [[ -e docker-compose.yml ]]; then \
-		docker-compose up \
+	if [[ -r $(DOCKER_COMPOSE_YML) ]]; then \
+		docker-compose -f "$(DOCKER_COMPOSE_YML)" up --detached \
 	; else \
 		$(docker_run) -dt $(cmd) \
 	; fi
@@ -177,22 +201,34 @@ run: stop
 #
 .PHONY: exec
 exec: stop
-	$(docker_run) -t $(cmd)
+	if [[ -r $(DOCKER_COMPOSE_YML) ]]; then \
+		docker-compose -f "$(DOCKER_COMPOSE_YML)" up \
+	; else \
+		$(docker_run) -t $(cmd) \
+	; fi
 
 ## shell: run the interactive shell in the container
 # https://gist.github.com/mitchwongho/11266726
 # Need entrypoint to make sure we get something interactive
 .PHONY: shell
 shell:
-	docker pull $(image)
-	docker run -it \
-		--entrypoint /bin/bash \
-		--rm $(volumes) $(flags) $(image)
+	if [[ -r $(DOCKER_COMPOSE_YML) ]]; then \
+		docker-compose -f "$(DOCKER_COMPOSE_YML)" run "$(DOCKER_COMPOSE_MAIN)" /bin/bash; \
+	else \
+		docker pull $(image); \
+		docker run -it \
+			--entrypoint /bin/bash \
+			--rm $(volumes) $(flags) $(image); \
+	fi
 
 ## resume: keep running an existing container
 .PHONY: resume
 resume:
-	docker start -ai $(container)
+	if [[ -r $(DOCKER_COMPOSE_YML) ]]; then \
+		docker-compose start; \
+	else \
+		docker start -ai $(container); \
+	fi
 
 # Note we say only the type file because otherwise it tries to delete $(docker_data) itself
 ## prune: Save some space on docker

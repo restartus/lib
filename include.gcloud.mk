@@ -102,9 +102,26 @@ workstation:
 		--image-family ubuntu-2004-lts \
 		--boot-disk-size 100
 
+## tf: build terraform using *.tf files in current directory
+.PHONY: tf
+tf:
+	terraform fmt
+	terraform init
+	terraform validate
+	terraform plan
+	terraform apply
+	terraform show
+
+
+## ssh: ssh into terraform
+.PHONY: ssh
+ssh:
+	eval ssh "$$(terraform output ip)"
+
 ## service: Create a service account
 # https://cloud.google.com/sdk/gcloud/reference/auth/activate-service-account
 # https://cloud.google.com/iam/docs/creating-managing-service-accounts
+			#--role=roles/compute.osLogin 
 .PHONY: service
 service:
 	SERVICE="$(PROJECT_PREFIX)-$(DEFAULT_USER)-service" && \
@@ -117,7 +134,7 @@ service:
 			--description="Service Account for $(DEFAULT_USER)" && \
 		gcloud projects add-iam-policy-binding $(DEFAULT_PROJECT) \
 			--member="serviceAccount:$$EMAIL" \
-			--role=roles/compute.osLogin \
+			--role=roles/editor \
 	; fi && \
 	if ! [[ -e $$SERVICE.key.json ]]; then \
 		gcloud iam service-accounts keys create $$SERVICE.key.json --iam-account=$$EMAIL \

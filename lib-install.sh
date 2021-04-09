@@ -60,7 +60,9 @@ if eval "[[ ! -v $lib_name ]]"; then
 	# usage: gem_install [ ruby packages ]
 	gem_install() {
 		if (($# < 1)); then return; fi
-		gem install "$@"
+		if ! gem install "$@"; then
+			sudo gem install "$@"
+		fi
 	}
 
 	# usage: tap_install [ taps... ]
@@ -318,13 +320,6 @@ if eval "[[ ! -v $lib_name ]]"; then
 			shift
 		done
 		for package in "$@"; do
-			if [[ ! $OSTYPE =~ darwin ]]; then
-				# do the linux check
-				if ! dpkg -s "$package" | grep -q "ok installed"; then
-					((++count))
-				fi
-				continue
-			fi
 			# look for Mac apps in a cask
 			# Note that search only searches for default Mac apps
 			# so need to use info and for some reason head -n 1
@@ -386,6 +381,14 @@ if eval "[[ ! -v $lib_name ]]"; then
 			fi
 			# if the flags are not valid ignore them and say we have it
 			# and the package is installed so we can just go ont
+			# last resort try dpkg
+			if [[ ! $OSTYPE =~ darwin ]]; then
+				# do the linux check
+				if ! dpkg -s "$package" | grep -q "ok installed"; then
+					((++count))
+				fi
+				continue
+			fi
 		done
 		return "$count"
 	}
@@ -431,7 +434,7 @@ if eval "[[ ! -v $lib_name ]]"; then
 
 	# mac_package installs or uninstalls depending on the package manager
 	# usage: mac_package operation package [flags...]
-	package_do() {
+	mac_package() {
 		if [[ ! $OSTYPE =~ darwin ]]; then return; fi
 		if (($# < 2)); then return 1; fi
 		local operation="$1"
@@ -478,10 +481,13 @@ if eval "[[ ! -v $lib_name ]]"; then
 
 			if [[ $OSTYPE =~ darwin ]]; then
 				# shellcheck disable=SC2086
-				package_do install "$package" $flags
+				mac_package install "$package" $flags
 				continue
 			fi
-
+			# shellcheck disable=SC2086
+			if brew install "$package" $flags; then
+				continue
+			fi
 			if ! sudo apt-get install -y "$package"; then
 				return $?
 			fi
@@ -503,7 +509,7 @@ if eval "[[ ! -v $lib_name ]]"; then
 			fi
 			if [[ $OSTYPE =~ darwin ]]; then
 				# shellcheck disable=SC2086
-				package_do uninstall "$package" $flags
+				mac_package uninstall "$package" $flags
 				continue
 			fi
 			# must be linux

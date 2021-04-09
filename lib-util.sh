@@ -387,7 +387,8 @@ if eval "[[ ! -v $lib_name ]]"; then
 		linux*)
 			# https://stackoverflow.com/questions/3601515/how-to-check-if-a-variable-is-set-in-bash
 			if [[ -v WSL_DISTRO_NAME ]]; then
-				echo windows
+				# so this will match linux unless you specifically check for wsl
+				echo linux-wsl
 			elif [[ -e /.dockerenv ]]; then
 				# assume this is linux
 				echo docker
@@ -395,10 +396,14 @@ if eval "[[ ! -v $lib_name ]]"; then
 				echo linux
 			fi
 			;;
+		# this is MSYS2 or Git for Widnows or MingW64 gnu on Cygwin
+		msys*)
+			echo windows
+			;;
 		esac
 	}
 
-	# Usage: in_os [ mac | windows | linux | docker ]
+	# Usage: in_os [ mac | windows | linux | docker | wsl]
 	in_os() {
 		if (($# < 1)); then
 			return 0

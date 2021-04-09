@@ -45,10 +45,10 @@ config_profile() {
 	if [[ $OSTYPE =~ darwin ]]; then
 		echo "$HOME/.bash_profile"
 	elif [[ $OSTYPE =~ linux ]]; then
-		echo "$HOME/.bashrc"
-	else
 		# .profile is only for run once at start
 		echo "$HOME/.profile"
+	else
+		echo "$HOME/.bashrc"
 	fi
 }
 

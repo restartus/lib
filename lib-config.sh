@@ -194,8 +194,8 @@ config_mark() {
 	local marker="${3:-"Added by $SCRIPTNAME"}"
 
 	config_touch "$file"
-	#
-	if ${force:-false} || ! grep -q "$comment_prefix $marker" "$file"; then
+	# need the -- incase the comment_prefix has a leading -
+	if ${force:-false} || ! grep -q -- "$comment_prefix $marker" "$file"; then
 		# do not quote config_sudo because it can return null
 		# https://stackoverflow.com/questions/3005963/how-can-i-have-a-newline-in-a-string-in-sh
 		$(config_sudo "$file") tee -a "$file" <<<$'\n'"$comment_prefix $marker on $(date)" >/dev/null

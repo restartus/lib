@@ -636,6 +636,7 @@ if eval "[[ ! -v $lib_name ]]"; then
 		fi
 		# Use the resume feature to make sure you got it by first trying and if
 		# http://www.cyberciti.biz/faq/curl-command-resume-broken-download/
+		log_verbose "curl -C - -L $url -o $dest"
 		if ! curl -C - -L "$url" -o "$dest"; then
 			# if we fail see if the return code doesn't allow -C for resume and retry
 			# Amazon AWS for instance doesn't allow resume and returns 31
@@ -690,6 +691,7 @@ if eval "[[ ! -v $lib_name ]]"; then
 			;;
 		zip)
 			# unpack the file
+			log_verbose "unzip $file"
 			unzip "$file"
 			# If the file unpacked into an app move it
 			local app="${file%.*}.app"
@@ -700,6 +702,12 @@ if eval "[[ ! -v $lib_name ]]"; then
 			app=${app%.*}.app
 			if [[ -e $app ]]; then
 				install_in_dir "$app"
+			fi
+			# could be a hammerspoon. spoon file which self installs
+			local spoon=${file%.*}
+			log_verbose "looking for $spoon"
+			if [[ -e $spoon ]]; then
+				open "$spoon"
 			fi
 			pref=${file%.*}.prefPane
 			if [[ -e $pref ]]; then
@@ -719,7 +727,6 @@ if eval "[[ ! -v $lib_name ]]"; then
 				echo "trying pkg install of $pkg"
 				sudo installer -pkg "$pkg" -target /
 			fi
-
 			;;
 		esac
 		popd >/dev/null || return 1

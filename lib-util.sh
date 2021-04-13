@@ -246,11 +246,16 @@ if eval "[[ ! -v $lib_name ]]"; then
 		if (($# < 1)); then
 			return 0
 		fi
-		if [[ $(linux_distribution) =~ $1 ]]; then
+		if ! command -v linux_distribution &> /dev/null; then
+			# lower case test since WSL Distro has initial caps
+			if in_wsl && [[ ${WSL_DISTRO_NAME,,} =~ ${1,,} ]]; then
+				return 0
+			fi
+		elif [[ $(linux_distribution) =~ ${1,,} ]]; then
 			return 0
-		else
-			return 1
 		fi
+
+		return 1
 	}
 
 	# usage: linux_version
@@ -386,10 +391,7 @@ if eval "[[ ! -v $lib_name ]]"; then
 			;;
 		linux*)
 			# https://stackoverflow.com/questions/3601515/how-to-check-if-a-variable-is-set-in-bash
-			if [[ -v WSL_DISTRO_NAME ]]; then
-				# so this will match linux unless you specifically check for wsl
-				echo linux-wsl
-			elif [[ -e /.dockerenv ]]; then
+			if [[ -e /.dockerenv ]]; then
 				# assume this is linux
 				echo docker
 			else
@@ -403,12 +405,19 @@ if eval "[[ ! -v $lib_name ]]"; then
 		esac
 	}
 
-	# Usage: in_os [ mac | windows | linux | docker | wsl]
+	# Usage: in_os [ mac | windows | linux | docker | windows]
 	in_os() {
 		if (($# < 1)); then
 			return 0
 		fi
 		if [[ ! $(util_os) =~ $1 ]]; then
+			return 1
+		fi
+	}
+
+	# Usage: in_wsl returns true if running in Windows Subsystem for Linux
+	in_wsl() {
+		if [[ ! -v WSL_DISTRO_NAME ]]; then
 			return 1
 		fi
 	}

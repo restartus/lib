@@ -320,6 +320,7 @@ if eval "[[ ! -v $lib_name ]]"; then
 			shift
 		done
 		for package in "$@"; do
+			log_verbose "looking for $package"
 			# look for Mac apps in a cask
 			# Note that search only searches for default Mac apps
 			# so need to use info and for some reason head -n 1
@@ -331,6 +332,7 @@ if eval "[[ ! -v $lib_name ]]"; then
 			# brew info parallel
 			if grep -q "^$package:" <<<"$brew_cask"; then
 				# found a brew cask now see if it is installed
+				log_verbose "$package is brew cask"
 				if grep -q "Not installed" <<<"$brew_cask"; then
 					((++count))
 				fi
@@ -343,52 +345,56 @@ if eval "[[ ! -v $lib_name ]]"; then
 			# need the a quotes for the echo to retain the newlines
 			# shellcheck disable=SC2181
 			if (($? != 0)) || echo "$brew_info" | grep -q "^Not installed"; then
+				log_verbose "$package is not installed as a brew package"
 				# no package see if it is available on brew
 				if is_brew_package "$package" >/dev/null; then
 					# it is available on brew so note it and continue
 					((++count))
+					continue
 				elif command -v port && ! port installed "$package" >/dev/null 2>&1; then
 					# this is not a brew package so try macports
 					((++count))
+					continue
 				fi
 				# not available so go to the next
-				continue
+
+				# if there are no required flags and it is installed the package
+				# and we go on to the next package
+				if [[ -n $flags ]]; then
+					# if there are require flags for the package, see if we have them
+					# http://stackoverflow.com/questions/20802320/detect-if-homebrew-package-is-installed
+					# https://stackoverflow.com/questions/8833230/how-do-i-find-a-list-of-homebrews-installable-packages
+					# brew reinstall --options does not work however
+					# https://github.com/Homebrew/legacy-homebrew/issues/38259
+					# if it is a valid flag for the $package and it is not installed
+					# then force an uninstall to get it
+					quoted_flags="$(flags_to_grep "$flags")"
+					# if the package has the required flags go on to the next
+					if grep -q "$quoted_flags" <<<"$brew_info"; then
+						continue
+					fi
+					# the package does not have the needed flags
+					if brew list "$package" 2>&1 | grep -q "$quoted_flags"; then
+						# if they are then uninstall the package to get ready
+						# for an install later
+						package_uninstall "$package"
+						((++count))
+						continue
+					fi
+				fi
 			fi
-			# if there are no required flags and it is installed the package
-			# and we go on to the next package
-			if [[ -z $flags ]]; then
-				continue
-			fi
-			# if there are require flags for the package, see if we have them
-			# http://stackoverflow.com/questions/20802320/detect-if-homebrew-package-is-installed
-			# https://stackoverflow.com/questions/8833230/how-do-i-find-a-list-of-homebrews-installable-packages
-			# brew reinstall --options does not work however
-			# https://github.com/Homebrew/legacy-homebrew/issues/38259
-			# if it is a valid flag for the $package and it is not installed
-			# then force an uninstall to get it
-			quoted_flags="$(flags_to_grep "$flags")"
-			# if the package has the required flags go on to the next
-			if grep -q "$quoted_flags" <<<"$brew_info"; then
-				continue
-			fi
-			# the package does not have the needed flags
-			if brew list "$package" 2>&1 | grep -q "$quoted_flags"; then
-				# if they are then uninstall the package to get ready
-				# for an install later
-				package_uninstall "$package"
-				((++count))
-				continue
-			fi
+
 			# if the flags are not valid ignore them and say we have it
 			# and the package is installed so we can just go ont
 			# last resort try dpkg
 			if [[ ! $OSTYPE =~ darwin ]]; then
-				# do the linux check
+				log_verbose "do the linux check"
 				if ! dpkg -s "$package" | grep -q "ok installed"; then
 					((++count))
 				fi
 				continue
 			fi
+
 		done
 		return "$count"
 	}
@@ -478,6 +484,7 @@ if eval "[[ ! -v $lib_name ]]"; then
 			if is_package_installed $flags "$package"; then
 				continue
 			fi
+			log_verbose "no package $package, try to install"
 
 			if [[ $OSTYPE =~ darwin ]]; then
 				# shellcheck disable=SC2086
@@ -488,6 +495,7 @@ if eval "[[ ! -v $lib_name ]]"; then
 			if brew install "$package" $flags; then
 				continue
 			fi
+			log_verbose "trying sudo apt-get install -y $package"
 			if ! sudo apt-get install -y "$package"; then
 				return $?
 			fi

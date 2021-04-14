@@ -244,6 +244,20 @@ if eval "[[ ! -v $lib_name ]]"; then
 		brew uninstall "$@"
 	}
 
+	snap_install() {
+		for package in "$@"; do
+			if ! snap list "$package"; then
+				snap install "$package" || true
+			fi
+		done
+	}
+
+	snap_uninstall() {
+		for package in "$@"; do
+			sudo snap remove "$package"
+		done
+	}
+
 	# Mercurial install into the current working directory
 	# hg_install url_of_repo [parent_dir_of_local_repo]
 	hg_install() {

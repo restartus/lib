@@ -17,6 +17,7 @@ PROJECTS ?= rich lucas guy
 SERVICES ?= container.googleapis.com artifactregistry.googleapis.com cloudbuild.googleapis.com
 DEFAULT_PROJECT ?= netdrones
 DEFAULT_USER ?= rich
+MACHINE ?= net-$(DEFAULT_USER)
 BILLING ?= Mercuries - Zazmic
 # Docker repo name
 REPO ?= $$(basename $(PWD))
@@ -112,6 +113,15 @@ tf:
 	terraform apply
 	terraform show
 
+## destroy: uninstall all the terraform plans in the current directory
+.PHONY: destroy
+destroy:
+	terraform destroy
+
+## reset: reset the windows password this cannnot be run from terraform
+.PHONY: reset
+reset:
+	gcloud beta compute reset-windows-password $(MACHINE) --project $(DEFAULT_PROJECT)
 
 ## ssh: ssh into terraform
 .PHONY: ssh

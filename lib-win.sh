@@ -30,7 +30,8 @@ if eval "[[ ! -v $lib_name ]]"; then
 		#if $VERBOSE; then
 			#NOEXIT="-noexit"
 		#fi
-		log_verbose "running powershell.exe sudo $*"
+		log_verbose "running sudo $*"
+		# this is hard on quoting
 		#log_verbose powershell.exe Start-Process powershell.exe -Verb RunAs \
 			#-ArgumentList "('$NOEXIT $*')"
 		#powershell.exe Start-Process powershell.exe -Verb RunAs \

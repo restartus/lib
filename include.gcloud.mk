@@ -105,22 +105,44 @@ workstation:
 
 ## tf: build terraform using *.tf files in current directory
 .PHONY: tf
-tf:
+tf: tf-lint
+	terraform plan
+	terraform apply
+
+
+## tf-lint: check if terraform plan is valid
+.PHONY: tf-lint
+tf-lint:
+	terraform show
 	terraform fmt
 	terraform init
 	terraform validate
-	terraform plan
-	terraform apply
-	terraform show
+
+## terminated: terminate an instance which keeps it from costing money
+.PHONY: terminated
+terminated: tf-lint
+	terraform plan -var="desired_status=TERMINATED"
+	terraform apply -var="desired_status=TERMINATED"
 
 ## destroy: uninstall all the terraform plans in the current directory
 .PHONY: destroy
-destroy:
-	terraform destroy
+ARGS :=
+ifdef DESTROY_TARGET
+	ARGS := -target=$(DESTROY_TARGET)
+endif
 
-## reset: reset the windows password this cannnot be run from terraform
-.PHONY: reset
-reset:
+destroy: tf-lint
+ifdef DESTROY_TARGET
+	@echo debug: destroy target is $(DESTROY_TARGET)
+endif
+@echo debug: ARGS is $(ARGS)
+	terraform plan -destroy $(ARGS)
+	terraform destroy $(ARGS)
+
+
+## password: reset the windows password this cannnot be run from terraform
+.PHONY: password
+password:
 	gcloud beta compute reset-windows-password $(MACHINE) --project $(DEFAULT_PROJECT)
 
 ## ssh: ssh into terraform

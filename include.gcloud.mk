@@ -14,17 +14,22 @@ CLUSTER ?= $(USER)
 PROJECT_PREFIX ?= net
 PROJECTS ?= rich lucas guy
 # continaer.googleapis.com - GKE
-SERVICES ?= container.googleapis.com artifactregistry.googleapis.com cloudbuild.googleapis.com
+SERVICES ?= container.googleapis.com artifactregistry.googleapis.com cloudbuild.googleapis.com billingbudgets.googleapis.com
 DEFAULT_PROJECT ?= netdrones
 DEFAULT_USER ?= rich
 MACHINE ?= net-$(DEFAULT_USER)
-BILLING ?= Mercuries - Zazmic
+
 # Docker repo name
 REPO ?= $$(basename $(PWD))
+
+BILLING ?= Mercuries - Zazmic
+GET_BILLING_ACCOUNT := BILLING_ACCOUNT=$$(gcloud beta billing accounts list --format='value(name)' --filter='displayName="$(BILLING)"')
+BUDGET_NAME ?= Budget by Make
+BUDGET_AMOUNT ?= 2000USD
+
 # note the organization is the same as the Google Workspace primary domain
 # https://stackoverflow.com/questions/43255794/edit-google-cloud-organization-name
 ORG ?= netdron.es
-
 
 # https://cloud.google.com/sdk/gcloud/reference/organizations/describe
 # https://cloud.google.com/compute/docs/gcloud-compute#default-properties
@@ -37,9 +42,10 @@ ORG ?= netdron.es
 # https://cloud.google.com/resource-manager/docs/creating-managing-projects
 # project id's must be unique across the google cloud
 ## org-init: Gloud init sets the organziation, its projects and bllling up
+#BILLING_ACCOUNT=$$(gcloud beta billing accounts list --format='value(name)' --filter='displayName="$(BILLING)"') && \
 .PHONY: org-init
-org-init:
-	BILLING_ACCOUNT=$$(gcloud beta billing accounts list --format='value(name)' --filter='displayName="$(BILLING)"') && \
+org-init: budget
+	$(GET_BILLING_ACCOUNT) && \
 	echo "Billing $$BILLING_ACCOUNT" && \
 	for proj_base in $(PROJECTS); do \
 		project="$(PROJECT_PREFIX)-$$proj_base" && \
@@ -55,10 +61,34 @@ org-init:
 		for service in $(SERVICES); do \
 			gcloud services enable $$service --project="$$project" \
 		; done ; \
-		if ! gsutil ls "gs://$$proj_base.$(ORG)"; then \
-			gsutil mb "gs://$$proj_base.$(ORG)" \
+		if ! gsutil ls "gs://$(ORG)/$$proj_base"; then \
+			gsutil mb "gs://$(ORG)/$$proj_base" \
 		; fi ; \
 	done
+
+# https://cloud.google.com/sdk/gcloud/reference/billing/budgets/create?hl=nl
+## budget: set a budget for the project if not already set
+# note that the percent is not as a percentage but a fraction
+# which is different than the documentation
+.PHONY: budget
+budget:
+	$(GET_BILLING_ACCOUNT) && \
+	if (($$(gcloud billing budgets list \
+			--billing-account="$$BILLING_ACCOUNT" \
+			--format="value(name)" \
+			--filter=displayName:"$(BUDGET_NAME)" | \
+			wc -l) < 1 \
+	)); then \
+		gcloud billing budgets create \
+			--billing-account="$$BILLING_ACCOUNT" \
+			--display-name="$(BUDGET_NAME)" \
+			--budget-amount=$(BUDGET_AMOUNT) \
+			--threshold-rule=percent=0.50 \
+			--threshold-rule=percent=0.75 \
+			--threshold-rule=percent=1; \
+	fi
+
+## delete a budget
 
 #there is always a default but it is unpopulated
 #if (( $$(gcloud config configurations list --format='value(name)' | wc -l) < 1)); then \
@@ -87,6 +117,10 @@ list:
 	gcloud compute accelerator-types list
 	gcloud compute images list
 	gcloud compute machine-types list
+	for proj_base in $(PROJECTS); do \
+		project="$(PROJECT_PREFIX)-$$proj_base" && \
+		gcloud beta compute machine-images list --project="$$project"; \
+	done
 
 ## workstation: Create a linux gpu enable station
 # https://cloud.google.com/compute/docs/gpus
@@ -113,9 +147,9 @@ tf: tf-lint
 ## tf-lint: check if terraform plan is valid
 .PHONY: tf-lint
 tf-lint:
+	terraform init -upgrade
 	terraform show
 	terraform fmt
-	terraform init
 	terraform validate
 
 ## terminated: terminate an instance which keeps it from costing money

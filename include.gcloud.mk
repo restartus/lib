@@ -30,6 +30,9 @@ BILLING_ACCOUNT ?= $$(gcloud beta billing accounts list --format="value(name)" -
 BUDGET_NAME ?= Budget by Make
 BUDGET_AMOUNT ?= 2000USD
 
+# number of instances
+COUNT ?= 1
+
 # note the organization is the same as the Google Workspace primary domain
 # https://stackoverflow.com/questions/43255794/edit-google-cloud-organization-name
 ORG ?= netdron.es
@@ -163,12 +166,12 @@ workstation:
 		--image-family ubuntu-2004-lts \
 		--boot-disk-size 100
 
-## tf: build terraform using *.tf files in current directory
+## tf: build terraform using *.tf files in current directory building COUNT instances
+COUNT :=
 .PHONY: tf
 tf: tf-lint
-	terraform plan
-	terraform apply
-
+	terraform plan $(TF_VARS)
+	terraform apply $(TF_VARS)
 
 ## tf-lint: check if terraform plan is valid
 .PHONY: tf-lint
@@ -181,23 +184,27 @@ tf-lint:
 ## terminated: terminate an instance which keeps it from costing money
 .PHONY: terminated
 terminated: tf-lint
-	terraform plan -var="desired_status=TERMINATED"
+	terraform plan -var="desired_status=TERMINATED" $(TF_VARS)
 	terraform apply -var="desired_status=TERMINATED"
 
-## destroy: uninstall all the terraform plans in the current directory
-.PHONY: destroy
-ARGS :=
-ifdef DESTROY_TARGET
-	ARGS := -target=$(DESTROY_TARGET)
-endif
 
+## destroy: uninstall all the terraform plan with target DESTROY_TARGET
+.PHONY: destroy
+TARGET ?=
+ifdef DESTROY_TARGET
+	TARGET := $(DESTROY_TARGET)
+endif
+ARGS ?=
+ifdef FORCE
+	ARGS += -var="prevent_destroy=false"
+endif
 destroy: tf-lint
 ifdef DESTROY_TARGET
 	@echo debug: destroy target is $(DESTROY_TARGET)
 endif
-@echo debug: ARGS is $(ARGS)
-	terraform plan -destroy $(ARGS)
-	terraform destroy $(ARGS)
+	@echo debug: ARGS is $(ARGS) TARGET is $(TARGET)
+	terraform plan $(ARGS) $(TARGET)
+	terraform destroy $(ARGS) $(TARGET)
 
 
 ## password: reset the windows password this cannnot be run from terraform

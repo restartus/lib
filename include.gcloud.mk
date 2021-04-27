@@ -53,6 +53,7 @@ org: project billing budget bucket service
 .PHONY: service
 service: project
 	for proj_base in $(PROJECTS); do \
+		project="$(PROJECT_PREFIX)-$$proj_base" && \
 		for service in $(SERVICES); do \
 			gcloud services enable $$service --project="$$project" \
 		; done ; \
@@ -82,7 +83,7 @@ bucket: billing
 
 ## billing: create billing links
 .PHONY: billing
-billing:
+billing: project
 	echo "Billing $(BILLING_ACCOUNT)" && \
 	echo $(PROJECTS) | xargs -n 1 \
 		bash -c 'project="$(PROJECT_PREFIX)-$$0" && \
@@ -97,7 +98,7 @@ billing:
 # note that the percent is not as a percentage but a fraction
 # which is different than the documentation
 .PHONY: budget
-budget:
+budget: billing
 	if (($$(gcloud billing budgets list \
 			--billing-account=$(BILLING_ACCOUNT) \
 			--format="value(name)" \

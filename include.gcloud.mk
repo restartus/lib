@@ -17,19 +17,26 @@ PROJECTS ?= rich lucas guy
 SERVICES ?= container.googleapis.com artifactregistry.googleapis.com cloudbuild.googleapis.com billingbudgets.googleapis.com
 DEFAULT_PROJECT ?= netdrones
 DEFAULT_USER ?= rich
+ORG_DOMAIN ?= netdron.es
 MACHINE ?= net-$(DEFAULT_USER)
 
 # Docker repo name
 REPO ?= $$(basename $(PWD))
 
-BILLING ?= Mercuries - Zazmic
-GET_BILLING_ACCOUNT := BILLING_ACCOUNT=$$(gcloud beta billing accounts list --format='value(name)' --filter='displayName="$(BILLING)"')
+# Mercuries - Zazmic is full name but = does not match it
+BILLING ?= Mercuries*
+BILLING_ACCOUNT ?= $$(gcloud beta billing accounts list --format="value(name)" --filter=displayName:"$(BILLING)")
+
 BUDGET_NAME ?= Budget by Make
 BUDGET_AMOUNT ?= 2000USD
 
 # note the organization is the same as the Google Workspace primary domain
 # https://stackoverflow.com/questions/43255794/edit-google-cloud-organization-name
 ORG ?= netdron.es
+
+## org: create project, billing, budget, service
+.PHONY: org
+org: project billing budget bucket service
 
 # https://cloud.google.com/sdk/gcloud/reference/organizations/describe
 # https://cloud.google.com/compute/docs/gcloud-compute#default-properties
@@ -41,30 +48,49 @@ ORG ?= netdron.es
 # https://linuxhandbook.com/shell-using/
 # https://cloud.google.com/resource-manager/docs/creating-managing-projects
 # project id's must be unique across the google cloud
-## org-init: Gloud init sets the organziation, its projects and bllling up
 #BILLING_ACCOUNT=$$(gcloud beta billing accounts list --format='value(name)' --filter='displayName="$(BILLING)"') && \
-.PHONY: org-init
-org-init: budget
-	$(GET_BILLING_ACCOUNT) && \
-	echo "Billing $$BILLING_ACCOUNT" && \
+## service: make services for each project
+.PHONY: service
+service: project
 	for proj_base in $(PROJECTS); do \
-		project="$(PROJECT_PREFIX)-$$proj_base" && \
-		if ! gcloud projects list --format="value(projectId)" | grep -q "^$$project$$"; then \
-			echo "creating $$project" ; \
-			gcloud projects create "$$project" \
-				--organization="$$(gcloud organizations describe $(ORG) --format='value(name)' | cut -d / -f 2)" \
-		; fi ; \
-		if [[ $$(gcloud beta billing projects describe $$project --format='value(billingEnabled)') =~ False ]]; then \
-			gcloud beta billing projects link "$$project" \
-				--billing-account="$$BILLING_ACCOUNT" \
-		; fi ; \
 		for service in $(SERVICES); do \
 			gcloud services enable $$service --project="$$project" \
 		; done ; \
-		if ! gsutil ls "gs://$(ORG)/$$proj_base"; then \
-			gsutil mb "gs://$(ORG)/$$proj_base" \
-		; fi ; \
 	done
+
+## project: Create Gcloud project
+.PHONY: project
+project:
+	echo $(PROJECTS) | xargs -n 1 \
+		bash -c 'project="$(PROJECT_PREFIX)-$$0" && \
+			if ! gcloud projects list --format="value(projectId)" | grep -q "^$$project$$"; then \
+				echo "creating $$project" ; \
+				gcloud projects create "$$project" \
+					--organization="$$(gcloud organizations describe $(ORG) --format=\"value(name)\" | cut -d / -f 2)" \
+			; fi' 
+
+## bucket: make buckets for the whole organization
+# note https://en.wikipedia.org/wiki/Xargs#-I_option:_single_argument
+# Uses the trick that bash -c has arguments after it that xargs fills in
+# do not create like this
+#echo $(PROJECTS) | xargs -n 1 \
+	#bash -c 'BUCKET=gs://$(ORG)/user/$$0 && \
+	#gsutil ls "$$BUCKET" || gsutil mb "$$BUCKET"'
+.PHONY: bucket
+bucket: billing
+	BUCKET="gs://$(ORG_DOMAIN)" && if ! gsutil ls "$$BUCKET" &>/dev/null; then gsutil mb "$$BUCKET"; fi
+
+## billing: create billing links
+.PHONY: billing
+billing:
+	echo "Billing $(BILLING_ACCOUNT)" && \
+	echo $(PROJECTS) | xargs -n 1 \
+		bash -c 'project="$(PROJECT_PREFIX)-$$0" && \
+			if [[ $$(gcloud beta billing projects describe $$project --format="value(billingEnabled)") =~ False ]]; then \
+				echo "creating $$project billing" && \
+				gcloud beta billing projects link "$$project" \
+					--billing-account=$(BILLING_ACCOUNT) \
+			; fi'
 
 # https://cloud.google.com/sdk/gcloud/reference/billing/budgets/create?hl=nl
 ## budget: set a budget for the project if not already set
@@ -72,21 +98,20 @@ org-init: budget
 # which is different than the documentation
 .PHONY: budget
 budget:
-	$(GET_BILLING_ACCOUNT) && \
 	if (($$(gcloud billing budgets list \
-			--billing-account="$$BILLING_ACCOUNT" \
+			--billing-account=$(BILLING_ACCOUNT) \
 			--format="value(name)" \
 			--filter=displayName:"$(BUDGET_NAME)" | \
 			wc -l) < 1 \
 	)); then \
 		gcloud billing budgets create \
-			--billing-account="$$BILLING_ACCOUNT" \
+			--billing-account=$(BILLING_ACCOUNT) \
 			--display-name="$(BUDGET_NAME)" \
 			--budget-amount=$(BUDGET_AMOUNT) \
 			--threshold-rule=percent=0.50 \
 			--threshold-rule=percent=0.75 \
-			--threshold-rule=percent=1; \
-	fi
+			--threshold-rule=percent=1 \
+	; fi
 
 ## delete a budget
 
@@ -184,12 +209,12 @@ password:
 ssh:
 	eval ssh "$$(terraform output ip)"
 
-## service: Create a service account
+## service-account: Create a service account
 # https://cloud.google.com/sdk/gcloud/reference/auth/activate-service-account
 # https://cloud.google.com/iam/docs/creating-managing-service-accounts
 			#--role=roles/compute.osLogin 
-.PHONY: service
-service:
+.PHONY: service-account
+service-account:
 	SERVICE="$(PROJECT_PREFIX)-$(DEFAULT_USER)-service" && \
 	echo $$SERVICE && \
 	EMAIL="$$SERVICE@$(DEFAULT_PROJECT).iam.gserviceaccount.com" && \

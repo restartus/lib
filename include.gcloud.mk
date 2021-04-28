@@ -15,10 +15,14 @@ PROJECT_PREFIX ?= net
 PROJECTS ?= rich lucas guy
 # continaer.googleapis.com - GKE
 SERVICES ?= container.googleapis.com artifactregistry.googleapis.com cloudbuild.googleapis.com billingbudgets.googleapis.com
-DEFAULT_PROJECT ?= netdrones
-DEFAULT_USER ?= rich
-ORG_DOMAIN ?= netdron.es
+
+# defaults for terraform
+DEFAULT_USER ?= $(USER)
+DEFAULT_PROJECT ?= net-$(DEFAULT_USER)
+
+# used for gcloud creationg
 MACHINE ?= net-$(DEFAULT_USER)
+ORG_DOMAIN ?= netdron.es
 
 # Docker repo name
 REPO ?= $$(basename $(PWD))
@@ -30,6 +34,10 @@ BILLING_ACCOUNT ?= $$(gcloud beta billing accounts list --format="value(name)" -
 BUDGET_NAME ?= Budget by Make
 BUDGET_AMOUNT ?= 2000USD
 
+# TF_VARS are passed from Makefile and include things like --project=net-rich
+# for instance
+TF_VARS ?=
+
 # number of instances
 COUNT ?= 1
 
@@ -37,9 +45,18 @@ COUNT ?= 1
 # https://stackoverflow.com/questions/43255794/edit-google-cloud-organization-name
 ORG ?= netdron.es
 
-## org: create project, billing, budget, service
-.PHONY: org
-org: project billing budget bucket service
+#there is always a default but it is unpopulated
+#if (( $$(gcloud config configurations list --format='value(name)' | wc -l) < 1)); then \
+## user: Initialize for a new user
+.PHONY: user
+user: key
+	if gcloud auth list | grep -q "No credentialed accounts"; then \
+		gcloud init && \
+		gcloud config set compute/region $(REGION) && \
+		gcloud config set project $(DEFAULT_PROJECT) && \
+		gcloud config set artifacts/location $(REGION) \
+		gcloud auth login
+	; fi
 
 
 ## key: make a key for gcloud and add it
@@ -50,6 +67,11 @@ key:
 		ssh-keygen -q -o -a 256 -t ed25519 -f "$$KEY_PATH" -C "$$KEY_FILE" && \
 		ssh-keygen -q -l -f "$$KEY_PATH" > "$$KEY_PATH.fingerprint" \
 	; fi
+
+
+## org: create project, billing, budget, service
+.PHONY: org
+org: project billing budget bucket service
 
 # https://cloud.google.com/sdk/gcloud/reference/organizations/describe
 # https://cloud.google.com/compute/docs/gcloud-compute#default-properties
@@ -129,18 +151,6 @@ budget: billing
 
 ## delete a budget
 
-#there is always a default but it is unpopulated
-#if (( $$(gcloud config configurations list --format='value(name)' | wc -l) < 1)); then \
-## init: Initialize for a new user
-.PHONY: init
-init:
-	if ! gcloud auth list | grep -q "No credentialed accounts"; then \
-		gcloud init && \
-		gcloud config set compute/region $(REGION) && \
-		gcloud config set project $(DEFAULT_PROJECT) && \
-		gcloud config set artifacts/location $(REGION) \
-	; fi
-
 ## list: List the current Get default config
 # these are long lists of active regions and zones
 #gcloud compute regions list
@@ -194,8 +204,8 @@ tf-lint:
 ## terminated: terminate an instance which keeps it from costing money
 .PHONY: terminated
 terminated: tf-lint
-	terraform plan -var="desired_status=TERMINATED" $(TF_VARS)
-	terraform apply -var="desired_status=TERMINATED"
+	terraform plan $(TF_VARS) -var="desired_status=TERMINATED" 
+	terraform apply $(TF_VARS) -var="desired_status=TERMINATED" 
 
 
 ## destroy: uninstall all the terraform plan with target DESTROY_TARGET
@@ -213,8 +223,8 @@ ifdef DESTROY_TARGET
 	@echo debug: destroy target is $(DESTROY_TARGET)
 endif
 	@echo debug: ARGS is $(ARGS) TARGET is $(TARGET)
-	terraform plan $(ARGS) $(TARGET)
-	terraform destroy $(ARGS) $(TARGET)
+	terraform plan $(TF_VARS) $(ARGS) $(TARGET) 
+	terraform destroy $(TF_VARS) $(ARGS) $(TARGET) 
 
 
 ## password: reset the windows password this cannnot be run from terraform

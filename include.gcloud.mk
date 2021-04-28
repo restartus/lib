@@ -45,9 +45,10 @@ org: project billing budget bucket service
 ## key: make a key for gcloud and add it
 key:
 	KEY_FILE=$(USER)@$(ORG)-cloud.google.com.id_ed25519 && \
-	if [[ ! -e "$$HOME/.ssh/$$KEY_FILE" ]]; then \
-		ssh-keygen -q -o -a 256 -t ed25519 -f "$$KEY_FILE" -C "$$KEY_FILE" && \
-		ssh-keygen -q -l -f "$$KEY_FILE" > "$$KEY_FILE.fingerprint" \
+	KEY_PATH="$$HOME/.ssh/$$KEY_FILE" && \
+	if [[ ! -e $$KEY_PATH ]]; then \
+		ssh-keygen -q -o -a 256 -t ed25519 -f "$$KEY_PATH" -C "$$KEY_FILE" && \
+		ssh-keygen -q -l -f "$$KEY_PATH" > "$$KEY_PATH.fingerprint" \
 	; fi
 
 # https://cloud.google.com/sdk/gcloud/reference/organizations/describe

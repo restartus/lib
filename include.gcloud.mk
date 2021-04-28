@@ -41,6 +41,12 @@ ORG ?= netdron.es
 .PHONY: org
 org: project billing budget bucket service
 
+
+## key: make a key for gcloud and add it
+key:
+	ssh-keygen -t
+	gcloud key upload
+
 # https://cloud.google.com/sdk/gcloud/reference/organizations/describe
 # https://cloud.google.com/compute/docs/gcloud-compute#default-properties
 # you cannot create org from the command line we just check for existance

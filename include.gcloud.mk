@@ -186,6 +186,83 @@ workstation:
 		--image-family ubuntu-2004-lts \
 		--boot-disk-size 100
 
+## copy: you cannot just copy an image you have to start an instance and then create
+# https://stackoverflow.com/questions/63440886/how-to-export-an-image-machine-to-another-gcp-account
+MI_PROJECT_SOURCE ?= airy-ceremony-300719
+MI_PROJECT_DEST ?= netdrones
+MACHINE_IMAGE ?= netdrones-ws-3
+# netdrones default service account
+# https://stackoverflow.com/questions/34543829/jq-cannot-index-array-with-string
+# https://stedolan.github.io/jq/manual/v1.5/#ConditionalsandComparisonso
+# https://garthkerr.com/search-json-array-jq/
+# https://stackoverflow.com/questions/47006062/how-do-i-list-the-roles-associated-with-a-gcp-service-account
+# we look for the account with "compute" in its name assuming it has gcloud
+# compute rights but there is an easier way (see below)
+	#SERVICE_ACCOUNT=$$(gcloud projects get-iam-policy $(MI_PROJECT_SOURCE) --format=json | \
+	#    jq -r '.bindings[] |  select(.role == "roles/editor") | .members[] | select(test("compute"))' | \
+	#    cut -d : -f 2) && \
+# https://stackoverflow.com/questions/47006062/how-do-i-list-the-roles-associated-with-a-gcp-service-account
+# https://cloud.google.com/compute/docs/machine-images/create-machine-images
+# instead of searching this way, look directly into the machine image policy
+		#if (( $$(gcloud projects get-iam-policy $(MI_PROJECT_SOURCE) --format json | \
+		#    jq 'select(.bindings[].members == "serviceAccount:$$DEST_SERVICE_ACCOUNT")' | wc -l ) < 1 )); then \
+		#
+# https://cloud.google.com/iam/docs/creating-managing-service-accounts
+.PHONY: copy
+copy: 
+	@echo "allow $(MI_PROJECT_DEST) image access to project $(MI_PROJECT_SOURCE)s $(MACHINE_IMAGE)"
+	if (( $$(gcloud beta compute machine-images list \
+			--project=$(MI_PROJECT_DEST) \
+			--filter="name=$(MACHINE_IMAGE)" 2>/dev/null | wc -l) <= 1 )); then \
+		DEST_SERVICE_ACCOUNT="$$(gcloud iam service-accounts list \
+			--project='$(MI_PROJECT_DEST)' \
+			--format='value(email)' | grep compute)" && \
+		echo "found $$DEST_SERVICE_ACCOUNT" && \
+		if (( $$(gcloud beta compute machine-images get-iam-policy \
+				$(MACHINE_IMAGE) \
+				--project=$(MI_PROJECT_SOURCE) \
+			    --filter=bindings.role=roles/compute.admin \
+			   	--filter=bindings.members:$$DEST_SERVICE_ACCOUNT \
+				--format="value(bindings.members[0])" | wc -l ) < 1)); then \
+					echo "adding $$DEST_SERVICE_ACCOUNT to $(MACHINE_IMAGE)" && \
+					gcloud beta compute machine-images add-iam-policy-binding  \
+						"$(MACHINE_IMAGE)" \
+						--project="$(MI_PROJECT_SOURCE)" \
+						--member="serviceAccount:$$DEST_SERVICE_ACCOUNT" \
+						--role=roles/compute.admin \
+		; fi && \
+		if (( $$(gcloud iam service-accounts get-iam-policy \
+				$$DEST_SERVICE_ACCOUNT \
+				--project=$(MI_PROJECT_DEST) \
+				--filter="bindings.members:user:$(USER)@$(ORG)" \
+				--format="value(bindings.role)" \
+				| wc -l ) < 1 )); then \
+					echo "bind $(USER)@$(ORG) to $$DEST_SERVICE_ACCOUNT" && \
+					gcloud iam service-accounts add-iam-policy-binding \
+						$$DEST_SERVICE_ACCOUNT \
+						--project=$(MI_PROJECT_DEST) \
+						--member="user:$(USER)@$(ORG)" \
+						--role="roles/iam.serviceAccountUser" \
+		; fi && \
+		if (( $$(gcloud compute instances list \
+				--project=$(MI_PROJECT_DEST) \
+				--format="value(status)" \
+				--filter=name:"$(MACHINE_IMAGE)" 2>/dev/null | wc -l) < 1 )); then \
+				echo "creating $(MACHINE_IMAGE) instance in $(MI_PROJECT_DEST)" && \
+				gcloud beta compute instances create "$(MACHINE_IMAGE)" \
+					--project=$(MI_PROJECT_DEST) \
+					--source-machine-image="projects/$(MI_PROJECT_SOURCE)/global/machineImages/$(MACHINE_IMAGE)" \
+					--service-account="$$DEST_SERVICE_ACCOUNT" \
+		; fi && \
+		gcloud beta compute machine-images create \
+			"$(MACHINE_IMAGE)" \
+			--project=$(MI_PROJECT_DEST) \
+			--source-instance="$(MACHINE_IMAGE)" && \
+		gcloud compute instances delete \
+			--project=$(MI_PROJECT_DEST) \
+			"$(MACHINE_IMAGE)" \
+	; fi
+
 ## tf: build terraform using *.tf files in current directory building COUNT instances
 COUNT :=
 .PHONY: tf

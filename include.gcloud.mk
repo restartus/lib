@@ -45,6 +45,14 @@ COUNT ?= 1
 # https://stackoverflow.com/questions/43255794/edit-google-cloud-organization-name
 ORG ?= netdron.es
 
+## dns: create google cloud DNS 
+# https://serverascode.com/2018/01/14/gcloud-dns-setup.html
+.PHONY: dns
+dns:
+	if ! gcloud services list --filter=name:dns.googleapis.com; then \
+		gcloud services enable dns.googleapis.com \
+	; fi
+
 #there is always a default but it is unpopulated
 #if (( $$(gcloud config configurations list --format='value(name)' | wc -l) < 1)); then \
 ## user: Initialize for a new user
@@ -163,13 +171,18 @@ list:
 	gcloud config get-value compute/zone
 	gcloud config get-value core/account
 	gcloud config get-value core/project
+	gcloud beta billing account list
 	gcloud compute accelerator-types list
-	gcloud compute images list
-	gcloud compute machine-types list
 	for proj_base in $(PROJECTS); do \
 		project="$(PROJECT_PREFIX)-$$proj_base" && \
 		gcloud beta compute machine-images list --project="$$project"; \
 	done
+
+## list-standard: standard types 
+.PHONY: list-standard
+list-standard:
+	gcloud compute images list
+	gcloud compute machine-types list
 
 ## workstation: Create a linux gpu enable station
 # https://cloud.google.com/compute/docs/gpus

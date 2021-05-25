@@ -246,7 +246,7 @@ if eval "[[ ! -v $lib_name ]]"; then
 		if (($# < 1)); then
 			return 0
 		fi
-		if ! command -v linux_distribution &> /dev/null; then
+		if ! command -v linux_distribution &>/dev/null; then
 			# lower case test since WSL Distro has initial caps
 			if in_wsl && [[ ${WSL_DISTRO_NAME,,} =~ ${1,,} ]]; then
 				return 0

@@ -48,7 +48,7 @@ pre-commit:
 	[[ -e .pre-commit-config.yaml ]] && $(RUN) pre-commit run --all-files || true
 
 
-## pre-commit-install: Install precommit
+## pre-commit-install: Install precommit (get prebuilt .pre-commit-config.yaml from @richtong/lib)
 .PHONY: pre-commit-install
 pre-commit-install:
 	if [[ -e .pre-commit-config.yaml ]]; then \

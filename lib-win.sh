@@ -25,17 +25,17 @@ if eval "[[ ! -v $lib_name ]]"; then
 	# set VERBOSE to not exit
 	# requires choco install psutils
 	win_sudo() {
-		if (( $# < 1 )); then return; fi
+		if (($# < 1)); then return; fi
 		#local NOEXIT=""
 		#if $VERBOSE; then
-			#NOEXIT="-noexit"
+		#NOEXIT="-noexit"
 		#fi
 		log_verbose "running sudo $*"
 		# this is hard on quoting
 		#log_verbose powershell.exe Start-Process powershell.exe -Verb RunAs \
-			#-ArgumentList "('$NOEXIT $*')"
+		#-ArgumentList "('$NOEXIT $*')"
 		#powershell.exe Start-Process powershell.exe -Verb RunAs \
-			#-ArgumentList "('$NOEXIT $*')"
+		#-ArgumentList "('$NOEXIT $*')"
 		powershell.exe sudo "$@"
 	}
 fi

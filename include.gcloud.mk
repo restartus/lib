@@ -45,7 +45,7 @@ COUNT ?= 1
 # https://stackoverflow.com/questions/43255794/edit-google-cloud-organization-name
 ORG ?= netdron.es
 
-## dns: create google cloud DNS 
+## dns: create google cloud DNS
 # https://serverascode.com/2018/01/14/gcloud-dns-setup.html
 .PHONY: dns
 dns:
@@ -111,7 +111,7 @@ project:
 				echo "creating $$project" ; \
 				gcloud projects create "$$project" \
 					--organization="$$(gcloud organizations describe $(ORG) --format=\"value(name)\" | cut -d / -f 2)" \
-			; fi' 
+			; fi'
 
 ## bucket: make buckets for the whole organization
 # note https://en.wikipedia.org/wiki/Xargs#-I_option:_single_argument
@@ -178,7 +178,7 @@ list:
 		gcloud beta compute machine-images list --project="$$project"; \
 	done
 
-## list-standard: standard types 
+## list-standard: standard types
 .PHONY: list-standard
 list-standard:
 	gcloud compute images list
@@ -222,7 +222,7 @@ MACHINE_IMAGE ?= netdrones-ws-3
 		#
 # https://cloud.google.com/iam/docs/creating-managing-service-accounts
 .PHONY: copy
-copy: 
+copy:
 	@echo "allow $(MI_PROJECT_DEST) image access to project $(MI_PROJECT_SOURCE)s $(MACHINE_IMAGE)"
 	if (( $$(gcloud beta compute machine-images list \
 			--project=$(MI_PROJECT_DEST) \
@@ -294,8 +294,8 @@ tf-lint:
 ## terminated: terminate an instance which keeps it from costing money
 .PHONY: terminated
 terminated: tf-lint
-	terraform plan $(TF_VARS) -var="desired_status=TERMINATED" 
-	terraform apply $(TF_VARS) -var="desired_status=TERMINATED" 
+	terraform plan $(TF_VARS) -var="desired_status=TERMINATED"
+	terraform apply $(TF_VARS) -var="desired_status=TERMINATED"
 
 
 ## destroy: uninstall all the terraform plan with target DESTROY_TARGET
@@ -313,8 +313,8 @@ ifdef DESTROY_TARGET
 	@echo debug: destroy target is $(DESTROY_TARGET)
 endif
 	@echo debug: ARGS is $(ARGS) TARGET is $(TARGET)
-	terraform plan $(TF_VARS) $(ARGS) $(TARGET) 
-	terraform destroy $(TF_VARS) $(ARGS) $(TARGET) 
+	terraform plan $(TF_VARS) $(ARGS) $(TARGET)
+	terraform destroy $(TF_VARS) $(ARGS) $(TARGET)
 
 
 ## password: reset the windows password this cannnot be run from terraform
@@ -330,7 +330,7 @@ ssh:
 ## service-account: Create a service account
 # https://cloud.google.com/sdk/gcloud/reference/auth/activate-service-account
 # https://cloud.google.com/iam/docs/creating-managing-service-accounts
-			#--role=roles/compute.osLogin 
+			#--role=roles/compute.osLogin
 .PHONY: service-account
 service-account:
 	SERVICE="$(PROJECT_PREFIX)-$(DEFAULT_USER)-service" && \
@@ -347,8 +347,8 @@ service-account:
 	; fi && \
 	if ! [[ -e $$SERVICE.key.json ]]; then \
 		gcloud iam service-accounts keys create $$SERVICE.key.json --iam-account=$$EMAIL \
-	; fi 
-	#gcloud auth activate-service-account 
+	; fi
+	#gcloud auth activate-service-account
 
 ## status: Get the currents status of running objects
 .PHONY: status

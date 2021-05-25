@@ -25,10 +25,10 @@ repos:
       - id: trailing-whitespace
 
   # we want to keep the output so do not strip the notebooks
-  #- repo: https://github.com/kynan/nbstripout
-    #rev: 0.4.0
-    #hooks:
-      #- id: nbstripout
+  - repo: https://github.com/kynan/nbstripout
+    rev: 0.4.0
+    hooks:
+      - id: nbstripout
   # https://github.com/roy-ht/pre-commit-jupyter
   - repo: https://github.com/aflc/pre-commit-jupyter
     rev: v1.2.1

@@ -120,7 +120,7 @@ no-cache: $(Dockerfile)
 
 # bash -c means the first argument is run and then the next are set as the $1,
 # to it and not that you use awk with the \$ in double quotes
-for_containers = bash -c 'for container in $$(docker ps -a | grep "$$0" | awk "{print \$$NF}"); \
+for_containers = bash -c 'for container in $$(docker ps -qa --filter name="$$0"); \
 						  do \
 						  	docker $$1 "$$container" $$2 $$3 $$4 $$5 $$6 $$7 $$8 $$9; \
 						  done'
@@ -129,7 +129,7 @@ for_containers = bash -c 'for container in $$(docker ps -a | grep "$$0" | awk "{
 # Because of quoting issues with awk
 # bash -c uses $0 for the first argument
 docker_run = bash -c ' \
-	last=$$(docker ps | grep $(image) | awk "{print \$$NF}" | cut -d/ -f2 | rev | cut -d- -f 1 | rev | sort -r | head -n1) ; \
+	last=$$(docker ps --format "{{.Names}}" | rev | cut -d "-" -f 1 | sort -r | head -n1) ; \
 	docker run $$0 \
 		--name $(container)-$$((last+1)) \
 		$(volumes) $(flags) $(image) $$@;\
@@ -142,8 +142,8 @@ stop:
 	if [[ -r $(DOCKER_COMPOSE_YML) ]]; then \
 		docker-compose -f "$(DOCKER_COMPOSE_YML)" down \
 	; else \
-		@$(for_containers) $(container) stop > /dev/null && \
-		@$(for_containers) $(container) "rm -v" > /dev/null \
+		$(for_containers) $(container) stop > /dev/null && \
+		$(for_containers) $(container) "rm -v" > /dev/null \
 	; fi
 
 ## pull: pulls the latest image

@@ -128,13 +128,16 @@ for_containers = bash -c 'for container in $$(docker ps -qa --filter name="$$0")
 # we use https://stackoverflow.com/questions/12426659/how-to-extract-last-part-of-string-in-bash
 # Because of quoting issues with awk
 # bash -c uses $0 for the first argument
+# the first $0 is assumed to be flags to docker run then come the arguments
+# And that the last digit is separate by a dash to an underscore
 docker_run = bash -c ' \
-	last=$$(docker ps --format "{{.Names}}" | rev | cut -d "-" -f 1 | sort -r | head -n1) ; \
+	last=$$(docker ps --format "{{.Names}}" | rev | tr - _ | cut -d "_" -f 1 | sort -r | head -n1) && \
 	docker run $$0 \
-		--name $(container)-$$((last+1)) \
-		$(volumes) $(flags) $(image) $$@;\
-	sleep 4; \
-	docker logs $(container)-$$((last+1))'
+		--name $(container)_$$((last+1)) \
+		$(volumes) $(flags) $(image) $$@ && \
+	sleep 4 && \
+	docker logs $(container)_$$((last+1))'
+
 
 ## stop: halts all running containers (deprecated)
 .PHONY: stop

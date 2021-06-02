@@ -6,6 +6,9 @@ repos:
     rev: v4.0.1
     hooks:
       - id: check-added-large-files
+        # https://gdevops.gitlab.io/tuto_git/tools/pre-commit/repos_hooks/repo_pre_commit_hooks/check-added-large-files/check-added-large-files.html
+        # If you have charts you need a larger max file
+        args: ['--maxkb=1000']
       - id: check-case-conflict
       - id: check-builtin-literals
       - id: check-executables-have-shebangs
@@ -31,7 +34,7 @@ repos:
       #- id: nbstripout
   # https://github.com/roy-ht/pre-commit-jupyter
   # Note that is very similar to https://github.com/roy-ht/pre-commit-jupyter
-  # to pin content and not delete it, add [pin] or [donotremove] so that 
+  # to pin content and not delete it, add [pin] or [donotremove] so that
   # you check it in.
   - repo: https://github.com/aflc/pre-commit-jupyter
     rev: v1.2.1

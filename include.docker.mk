@@ -190,10 +190,14 @@ pull:
 
 
 ## run: Run the docker container in the background (for web apps like Jupyter)
+# we show the log after 5 second so you can see things like the security token
+# needs
 .PHONY: run
 run: stop
 	if [[ -r $(DOCKER_COMPOSE_YML) ]]; then \
-		docker-compose -f "$(DOCKER_COMPOSE_YML)" up --detached \
+		docker compose -f "$(DOCKER_COMPOSE_YML)" up -d  && \
+		sleep 5 && \
+		docker compose logs \
 	; else \
 		$(docker_run) -dt $(cmd) \
 	; fi

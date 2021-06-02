@@ -30,6 +30,9 @@ repos:
     #hooks:
       #- id: nbstripout
   # https://github.com/roy-ht/pre-commit-jupyter
+  # Note that is very similar to https://github.com/roy-ht/pre-commit-jupyter
+  # to pin content and not delete it, add [pin] or [donotremove] so that 
+  # you check it in.
   - repo: https://github.com/aflc/pre-commit-jupyter
     rev: v1.2.1
     hooks:

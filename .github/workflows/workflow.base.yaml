@@ -4,8 +4,9 @@ name: Base Lint
 
 on:
   push:
-    - main
-    - master
+    branches:
+      - main
+      - master
   pull_request:
 
 jobs:

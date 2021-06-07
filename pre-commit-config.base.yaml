@@ -44,12 +44,21 @@ repos:
       - id: shellcheck
         additional_dependencies: []
       - id: shfmt
-  - repo: local
+
+  # switch from mdl to markdown-cli more flexible disabling than .mdlrc
+  #- repo: local
+  #  hooks:
+  #    # https://github.com/markdownlint/markdownlint/blob/master/.pre-commit-hooks.yaml
+  #    - id: markdownlintlocal
+  #      name: Markdownlint Local
+  #      description: Run Markdownlint locally
+  #      entry: mdl
+  #      language: ruby
+  #      files: \.(md|mdown|markdown)$
+
+  # https://github.com/igorshubovych/markdownlint-cli
+  # node version of markdownlint with better disabling of checks
+  - repo: https://github.com/igorshubovych/markdownlint-cli
+    rev: v0.27.1
     hooks:
-      # https://github.com/markdownlint/markdownlint/blob/master/.pre-commit-hooks.yaml
-      - id: markdownlintlocal
-        name: Markdownlint Local
-        description: Run Markdownlint locally
-        entry: mdl
-        language: ruby
-        files: \.(md|mdown|markdown)$
+    - id: markdownlint

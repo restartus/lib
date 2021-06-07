@@ -56,15 +56,25 @@ repos:
       - id: shellcheck
       - id: shfmt
 
-  - repo: local
+  # switch from using mdl to markdown-cli because it handles disabling
+  # checks on a per line basis rather than per project with .mdlrc
+  #- repo: local
+  #  hooks:
+  #    # https://github.com/markdownlint/markdownlint/blob/master/.pre-commit-hooks.yaml
+  #    - id: markdownlintlocal
+  #      name: Markdownlint Local
+  #      description: Run Markdownlint locally
+  #      entry: mdl
+  #      language: ruby
+        #files: \.(md|mdown|markdown)$
+
+
+  # https://github.com/igorshubovych/markdownlint-cli
+  # node version of markdownlint with better disabling of checks
+  - repo: https://github.com/igorshubovych/markdownlint-cli
+    rev: v0.27.1
     hooks:
-      # https://github.com/markdownlint/markdownlint/blob/master/.pre-commit-hooks.yaml
-      - id: markdownlintlocal
-        name: Markdownlint Local
-        description: Run Markdownlint locally
-        entry: mdl
-        language: ruby
-        files: \.(md|mdown|markdown)$
+    - id: markdownlint
 
   # https://ljvmiranda921.github.io/notebook/2018/06/21/precommits-using-black-and-flake8/
   # https://github.com/pre-commit/mirrors-mypy

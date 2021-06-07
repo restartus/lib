@@ -2,17 +2,17 @@
 # https://docs.github.com/en/actions/guides/building-and-testing-python
 name: Python Lint
 
-# Assumes python files are in ./python or pushes to main
+# Uncomment if you assumeZZk: Assumes python files are in ./python or pushes to main
 on:
   push:
     branches:
       - master
       - main
-    paths:
+    #paths:
       - 'python/**'
   pull_request:
-    paths:
-      - 'python/**'
+    #paths:
+      #- 'python/**'
 
 jobs:
 

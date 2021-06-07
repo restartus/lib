@@ -4,11 +4,13 @@ name: Base Lint
 
 on:
   push:
+    - main
+    - master
   pull_request:
 
 jobs:
 
-  python:
+  base:
     #runs-on: ubuntu-latest
     runs-on: ubuntu-20.04
     # Note with this version testing you do not need tox in the cloud
@@ -73,10 +75,11 @@ jobs:
           #gem install mdl
 
       # install dependencies for markdownlint-cli
-      - name: Install node and markdown-cli
+      - name: Install node
         uses: actions/setup-node@v2
         with:
           node-version: '14'
+      - name: Install markdownlint-cli
         run: npm install -g markdownlint-cli
 
 

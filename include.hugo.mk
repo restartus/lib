@@ -47,11 +47,11 @@ endif
 hugo:
 	$(HUGO_RUN)
 
-## hugo-server: run the site
+## server: run the site
 # Use this line for kalkegg
 #$(run) -p $(HUGO_PORT):$(HUGO_PORT) "$(HUGO_IMAGE)" server
-.PHONY: hugo-server
-hugo-server:
+.PHONY: server
+server:
 ifeq ($(HUGO_ENV),docker)
 	$(HUGO_DOCKER) -e HUGO_WATCH=1 -it -p $(HUGO_PORT):$(HUGO_PORT) "$(HUGO_IMAGE)"
 else

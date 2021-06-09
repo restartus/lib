@@ -1,8 +1,10 @@
 # For the main source repo with random stuff in it
 # tried dockerfilelint but too strict and disabling does not work
-# cannot run check-json because notebooks do not conform
-# cannot run check-executables-have-shebangs because of classes
 # cannot run check-builtin-literals due to foreign python code
+
+# note that we exclude node_modules and _vendor for hugo
+# since these are typically third party modules
+# cannot run  markdownlint checks for hugo
 ---
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
@@ -10,7 +12,40 @@ repos:
     rev: v4.0.1
     hooks:
       - id: check-added-large-files
+      - id: check-ast
+      - id: check-builtin-literals
       - id: check-case-conflict
+      - id: check-docstring-first
+      # cannot run check-executables-have-shebangs because of classes
+      - id: check-executables-have-shebangs
+      # exclude third-party files
+      # https://github.com/psf/black/issues/395
+      - id: check-json
+        exclude: (^_vendor/|^node_modules/)
+      # do not run this since we do include.sh from elsewhere
+      #- id: check-symlinks
+      - id: check-merge-conflict
+      - id: check-toml
+      - id: check-xml
+        exclude: (^_vendor/|^node_modules/)
+      # comment out if you are doing notebooks
+      - id: check-yaml
+        args: [--allow-multiple-documents]
+        exclude: (^_vendor/|^node_modules/)
+      - id: destroyed-symlinks
+      # https://github.com/pre-commit/pre-commit-hooks/blob/master/pre_commit_hooks/detect_aws_credentials.py
+      - id: detect-aws-credentials
+        args: [--allow-missing-credentials]
+      - id: detect-private-key
+      - id: end-of-file-fixer
+      - id: forbid-new-submodules
+      - id: mixed-line-ending
+      # we allow direct commits to main uncomment if you PRs only
+      #- id: no-commit-to-branch
+      - id: pretty-format-json
+        args: [ --autofix ]
+        exclude: (^_vendor/|^node_modules/)
+      - id: trailing-whitespace
       - id: check-executables-have-shebangs
       - id: check-json
       # do not run this since we do include.sh from elsewhere
@@ -24,15 +59,8 @@ repos:
       # https://github.com/pre-commit/pre-commit-hooks/blob/master/pre_commit_hooks/detect_aws_credentials.py
       - id: detect-aws-credentials
         args: [--allow-missing-credentials]
-      - id: detect-private-key
-      - id: end-of-file-fixer
-      - id: forbid-new-submodules
-      - id: mixed-line-ending
-      # we allow direct commits to main uncomment if you PRs only
-      #- id: no-commit-to-branch
-      - id: pretty-format-json
-        args: [ --autofix ]
-      - id: trailing-whitespace
+      - id: name-tests-test
+      - id: requirements-txt-fixer
 
   - repo: https://github.com/jumanjihouse/pre-commit-hooks
     rev: 2.1.5
@@ -46,20 +74,25 @@ repos:
         additional_dependencies: []
       - id: shfmt
 
-  # switch from mdl to markdown-cli more flexible disabling than .mdlrc
-  #- repo: local
-  #  hooks:
-  #    # https://github.com/markdownlint/markdownlint/blob/master/.pre-commit-hooks.yaml
-  #    - id: markdownlintlocal
-  #      name: Markdownlint Local
-  #      description: Run Markdownlint locally
-  #      entry: mdl
-  #      language: ruby
-  #      files: \.(md|mdown|markdown)$
-
   # https://github.com/igorshubovych/markdownlint-cli
   # node version of markdownlint with better disabling of checks
   - repo: https://github.com/igorshubovych/markdownlint-cli
     rev: v0.27.1
     hooks:
     - id: markdownlint
+  - repo: https://github.com/kynan/nbstripout
+    rev: 0.4.0
+    hooks:
+      - id: nbstripout
+
+  # https://github.com/roy-ht/pre-commit-jupyter
+  - repo: https://github.com/aflc/pre-commit-jupyter
+    rev: v1.2.1
+    hooks:
+      - id: jupyter-notebook-cleanup
+        args:
+          - --remove-kernel-metadata
+          - --pin-patterns
+          - "[pin];[donotremove]"
+        files: \.ipynb$
+        types: ["file"]

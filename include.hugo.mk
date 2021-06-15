@@ -26,6 +26,8 @@ HUGO_THEME_ORG ?= richtong
 HUGO_THEME ?= parsa-hugo
 # Note no https here but it is the path after that
 HUGO_THEME_PATH ?= github.com/$(HUGO_THEME_ORG)/$(HUGO_THEME)
+# location of blog
+HUGO_POSTS ?= posts
 
 # this requires variables from include.mk to work like GIT_ORG and name
 GIT_PATH ?= github.com/$(GIT_ORG)/$(name)
@@ -71,10 +73,10 @@ endif
 # https://discourse.gohugo.io/t/hugo-modules-for-dummies/20758
 # by convention we turn the entire repo into a module
 # https://geeksocket.in/posts/hugo-modules/
-## hugo-theme: Get a HUGO_THEME as module (in development not working yet)
+## theme: Get a HUGO_THEME as module (in development not working yet)
 ## currently broken with themefisher/parsa-hugo but works with richtong/parsa-hugo
-.PHONY: hugo-theme
-hugo-theme:
+.PHONY: theme
+theme:
 	if ! grep -q "$(GIT_PATH)" go.mod; then \
 		$(HUGO_RUN) mod init "$(GIT_PATH)"; \
 	fi
@@ -84,43 +86,43 @@ hugo-theme:
 	fi
 	@echo see $(HUGO_THEME_PATH)/exampleSite and copy
 
-## hugo-mod: get latest go modules and add to repo
-.PHONY: hugo-mod
-hugo-mod:
+## get: get latest go modules and add to repo
+.PHONY: get
+get:
 	$(HUGO_RUN) mod get -u ./...
 	$(HUGO_RUN) mod vendor
 
-## hugo-theme-sm: add a submodule theme (deprecated)
-.PHONY: hugo-theme-sm
+## theme-submodule: add a submodule theme (deprecated) use module theme instead
+.PHONY: theme-submodule
 hugo-theme-sm:
 	git submodule add "https://github.com/$(HUGO_THEME_ORG)/$(HUGO_THEME)" "themes/$(HUGO_THEME)" || true
 	grep "$(HUGO_THEME)" config.toml || echo "HUGO_THEME = \"$(HUGO_THEME)\"" >> config.toml
 
-## hugo-post: New blog post
-.PHONY: hugo-post
-hugo-post:
-	$(HUGO_RUN) new posts/$
+## post: New blog post in ./posts
+.PHONY: post
+post:
+	$(HUGO_RUN) new $(HUGO_POSTS)/$
 
 # https://cli.netlify.com
 ## netlify: run netlify local dev environment
-.PHONY: netlify
-netlify:
+.PHONY: dev
+dev:
 	netlify dev
 
-## netlify-deploy: force deployment without a push
-.PHONY: netlify-deploy
-netlify-deploy:
+## deploy: force deployment without a push
+.PHONY: deploy
+deploy:
 	netlify deploy
 
-## netlify-build: build locally as a test
-.PHONY: netlify-build
-netlify-build:
+## build: build locally as a test
+.PHONY: build
+build:
 	netlify build
 
-## netlify-install: initialize netlify cli and link it to current repo
+## netlify: initialize netlify cli and link it to current repo
 # https://cli.netlify.com/getting-started
-.PHONY: netlify-install
-netlify-install:
+.PHONY: netlify
+netlify:
 	@echo "assumes that you have done netlify login or netlify switch"
 	if [[ -d .netlify ]]; then netlify link; else netlify init; fi
 	netlify env:set GIT_LFS_ENABLED true

@@ -5,15 +5,18 @@
 # https://joshuatz.com/posts/2019/docker-compose-relative-env-files-variable-substitution/
 # https://github.com/docker/awesome-compose
 # https://betterprogramming.pub/using-variables-in-docker-compose-265a604c2006
+---
 version: "3.9"
 services:
   # note keys cannot be substituted so can't say ${foo}:
   main:
-    image: ${APP_IMAGE}
+    image: ${IMAGE}
     volumes:
-      - ${APP_DATA}:${APP_CONTAINER_DATA}
+      - ${DATA}:${CONTAINER_DATA}
     # equivalent of -it
     # https://github.com/compose-spec/compose-spec/blob/master/spec.md
-    stdin_open: true
-    tty: true
-    command: ${APP_COMMAND}
+    stdin_open: ${STDIN_OPEN}
+    tty: ${TTY}
+    command: ${COMMAND}
+    ports:
+      - ${CONTAINER_PORT}:${HOST_PORT}

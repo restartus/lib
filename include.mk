@@ -40,7 +40,7 @@ tag:
 readme:
 	doctoc *.md
 
-## pre-commit: Run pre-commit hooks
+## pre-commit: Run pre-commit hooks and install if not there with update
 .PHONY: pre-commit
 pre-commit:
 	@echo this does not work on WSL so you need to run pre-commit install manually

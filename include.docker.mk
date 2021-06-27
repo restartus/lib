@@ -63,9 +63,9 @@ docker_flags ?= --build-arg "DOCKER_USER=$(DOCKER_USER)" \
 .PHONY: docker
 docker: $(Dockerfile)
 	if [[ -r  "$(DOCKER_COMPOSE_YML)" ]]; then \
-		docker-compose -f $(DOCKER_COMPOSE_YML) build --pull \
+		docker compose -f $(DOCKER_COMPOSE_YML) build --pull \
 					$(docker_flags); \
-		docker-compose push; \
+		docker compose push; \
 	else \
 		docker build --pull \
 					$(docker_flags) \
@@ -80,7 +80,7 @@ docker: $(Dockerfile)
 .PHONY: docker-lint
 docker-lint: $(Dockerfile)
 	if [[ -r $((DOCKER_COMPOSE_YML)) ]]; then \
-		docker-compose -f "$(DOCKER_COMPOSE_YML)" config; \
+		docker compose -f "$(DOCKER_COMPOSE_YML)" config; \
 	else \
 		dockerfilelint $(Dockerfile); \
 	fi
@@ -108,7 +108,7 @@ push:
 .PHONY: no-cache
 no-cache: $(Dockerfile)
 	if [[ -e $(DOCKER_COMPOSE_YML) ]]; then \
-		docker-compose -f "$(DOCKER_COMPOSE_YML)" build \
+		docker compose -f "$(DOCKER_COMPOSE_YML)" build \
 			$(docker_flags) \
 			--build-arg NB_USER=$(DOCKER_USER); \
 	else \
@@ -143,7 +143,7 @@ docker_run = bash -c ' \
 .PHONY: stop
 stop:
 	if [[ -r $(DOCKER_COMPOSE_YML) ]]; then \
-		docker-compose -f "$(DOCKER_COMPOSE_YML)" down \
+		docker compose -f "$(DOCKER_COMPOSE_YML)" down \
 	; else \
 		$(for_containers) $(container) stop > /dev/null && \
 		$(for_containers) $(container) "rm -v" > /dev/null \
@@ -153,7 +153,7 @@ stop:
 .PHONY: pull
 pull:
 	if [[ -r $(DOCKER_COMPOSE_YML) ]]; then \
-		docker-compose -f "$(DOCKER_COMPOSE_YML)" pull; \
+		docker compose -f "$(DOCKER_COMPOSE_YML)" pull; \
 	else \
 		docker pull $(image); \
 	fi
@@ -209,7 +209,7 @@ run: stop
 .PHONY: exec
 exec: stop
 	if [[ -r $(DOCKER_COMPOSE_YML) ]]; then \
-		docker-compose -f "$(DOCKER_COMPOSE_YML)" up \
+		docker compose -f "$(DOCKER_COMPOSE_YML)" up \
 	; else \
 		$(docker_run) -t $(cmd) \
 	; fi
@@ -220,7 +220,7 @@ exec: stop
 .PHONY: shell
 shell:
 	if [[ -r $(DOCKER_COMPOSE_YML) ]]; then \
-		docker-compose -f "$(DOCKER_COMPOSE_YML)" run "$(DOCKER_COMPOSE_MAIN)" /bin/bash; \
+		docker compose -f "$(DOCKER_COMPOSE_YML)" run "$(DOCKER_COMPOSE_MAIN)" /bin/bash; \
 	else \
 		docker pull $(image); \
 		docker run -it \
@@ -232,7 +232,7 @@ shell:
 .PHONY: resume
 resume:
 	if [[ -r $(DOCKER_COMPOSE_YML) ]]; then \
-		docker-compose start; \
+		docker compose start; \
 	else \
 		docker start -ai $(container); \
 	fi

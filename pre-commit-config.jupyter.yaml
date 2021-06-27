@@ -1,0 +1,95 @@
+# For the main source repo with random stuff in it
+# tried dockerfilelint but too strict and disabling does not work
+# cannot run check-builtin-literals due to foreign python code
+
+# note that we exclude node_modules and _vendor for hugo
+# since these are typically third party modules
+# cannot run  markdownlint checks for hugo
+---
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    # only language independent hooks
+    rev: v4.0.1
+    hooks:
+      - id: check-added-large-files
+        args: ["--maxkb=2048"]
+      - id: check-merge-conflict
+      - id: check-executables-have-shebangs
+      # exclude third-party files
+      # https://github.com/psf/black/issues/395
+      # do not run this since we do include.sh from elsewhere
+      # - id: check-symlinks
+      - id: check-toml
+      - id: check-json
+        exclude: (^_vendor/|^node_modules/)
+      - id: pretty-format-json
+        args: [--autofix]
+        exclude: (^_vendor/|^node_modules/)
+      - id: check-xml
+        exclude: (^_vendor/|^node_modules/)
+      - id: check-yaml
+        args: [--allow-multiple-documents]
+        exclude: (^_vendor/|^node_modules/)
+      # https://github.com/pre-commit/pre-commit-hooks/blob/master/pre_commit_hooks/detect_aws_credentials.py
+      - id: detect-aws-credentials
+        args: [--allow-missing-credentials]
+      - id: detect-private-key
+      - id: end-of-file-fixer
+      - id: forbid-new-submodules
+      - id: mixed-line-ending
+      # we allow direct commits to main uncomment if you PRs only
+      # - id: no-commit-to-branch
+      - id: trailing-whitespace
+      - id: check-executables-have-shebangs
+      - id: destroyed-symlinks
+      # include.sh and surround.sh
+      - id: check-symlinks
+        exclude: (include.sh|surround.sh)
+      # https://github.com/pre-commit/pre-commit-hooks/blob/master/pre_commit_hooks/detect_aws_credentials.py
+      - id: name-tests-test
+      - id: requirements-txt-fixer
+      - id: check-ast
+      - id: check-builtin-literals
+      - id: check-case-conflict
+      - id: check-docstring-first
+
+  - repo: https://github.com/jumanjihouse/pre-commit-hooks
+    rev: 2.1.5
+    hooks:
+      # Generating a ruby error with run with all-files
+      # this is using the ruby mdl utility so switching to the node version
+      # because it has per line disabling of checks
+      # - id: markdownlint
+      - id: shfmt
+      # https://github.com/jumanjihouse/pre-commit-hooks/issues/82
+      # additional dependency bug in pre-commit v2.10
+      # should be fixed now when doing a pre-commit all
+      - id: shellcheck
+      # additional_dependencies: []
+
+  # https://github.com/igorshubovych/markdownlint-cli
+  # node version of markdownlint with better disabling of checks
+  - repo: https://github.com/igorshubovych/markdownlint-cli
+    rev: v0.27.1
+    hooks:
+      - id: markdownlint
+
+  # strips everything out so use pre-commit-jupyter instead
+  # - repo: https://github.com/kynan/nbstripout
+  #   rev: 0.4.0
+  #   hooks:
+  #     - id: nbstripout
+
+  # https://github.com/roy-ht/pre-commit-jupyter
+  # Removes notebook output, you leave output in git repo
+  # by adding [pin] or [donotremove] in a comment in a cell somewhere
+  - repo: https://github.com/aflc/pre-commit-jupyter
+    rev: v1.2.1
+    hooks:
+      - id: jupyter-notebook-cleanup
+        args:
+          - --remove-kernel-metadata
+          - --pin-patterns
+          - "[pin];[donotremove]"
+        files: \.ipynb$
+        types: ["file"]

@@ -164,14 +164,24 @@ ifeq ($(ENV),conda)
 	conda config --env --add channels conda-forge
 	conda config --env --set channel_priority strict
 	conda install --name $(name) -y python=$(PYTHON)
+ifneq ($(strip $(PIP_ONLY)),)
+	$(RUN) pip install $(PIP_ONLY) || true
+endif
+	conda install --name $(name) -y $(PIP_DEV)
+	conda install --name $(name) -y $(PIP)
 	[[ -r environment.yml ]] && conda env update --name $(name) -f environment.yml || true
-	[[ -r requirements.txt ]] && grep -v "^#" requirements.txt | \
-			(while read requirement; do \
+	# echo $$SHELL
+	[[ -r requirements.txt ]] && \
+		grep -v "^#" requirements.txt | \
+	        (while read requirement; do \
+				echo "processing $$requirement"; \
 				if ! conda install --name $(name) -y "$$requirement"; then \
-					$(ACTIVATE) && pip install "$$requirement"; \
-				fi; \
-			done)
-	exit
+					$(ACTIVATE) && \
+					pip install "$$requirement"; \
+					echo "installed $$requirement";\
+	            fi; \
+	        done) \
+		|| true
 	# https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#setting-environment-variables
 	conda env config vars set PYTHONNOUSERSITE=true --name $(name)
 	@echo WARNING -- we do not parse the PYthon User site in ~/.

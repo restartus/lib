@@ -22,6 +22,12 @@ mac_version() {
 # https://en.wikipedia.org/wiki/MacOS
 mac_codename() {
 	case $(mac_version) in
+	12.*)
+		echo Monterey
+		;;
+	11.*)
+		echo Big Sur
+		;;
 	10.15*)
 		echo Catalina
 		;;

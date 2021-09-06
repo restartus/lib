@@ -68,10 +68,15 @@ ACTIVATE ?=
 UPDATE ?=
 INSTALL ?=
 INSTALL_DEV ?= $(INSTALL)
+MACOS_VERSION ?= $(shell sw_vers -productVersion)
+# due to https://github.com/pypa/pipenv/issues/4564
+# pipenv does not correctly deal with MacOS 11 and above so run in
+# compatibility mode as of Sept 2021
+# hopefully we can turn this off eventually
 ifeq ($(ENV),pipenv)
-	RUN := pipenv run
-	UPDATE := pipenv update
-	INSTALL := pipenv install
+	RUN := SYSTEM_VERSION_COMPAT=1 pipenv run
+	UPDATE := SYSTEM_VERSION_COMPAT=1 pipenv update
+	INSTALL := SYSTEM_VERSION_COMPAT=1 pipenv install
 	INSTALL_DEV := $(INSTALL) --dev --pre
 	# conditional dependency https://stackoverflow.com/questions/59867140/conditional-dependencies-in-gnu-make
 	INSTALL_REQ = pipenv-python
@@ -172,19 +177,19 @@ ifeq ($(ENV),conda)
 	@echo WARNING -- we do not parse the PYthon User site in ~/.
 else
 	# https://stackoverflow.com/questions/38801796/makefile-set-if-variable-is-empty
-	ifneq ($(strip $(PIP)),)
-		$(INSTALL) $(PIP) || true
-	endif
-	ifneq ($(strip $(PIP_DEV)),)
-		$(INSTALL_DEV) $(PIP_DEV) || true
-	endif
-	ifneq ($(strip $(PIP_ONLY)),)
-		$(RUN) pip install $(PIP_ONLY) || true
-	endif
-	ifeq ($(ENV),pipenv)
-		pipenv lock
-		pipenv update
-	endif
+ifneq ($(strip $(PIP)),)
+	$(INSTALL) $(PIP) || true
+endif
+ifneq ($(strip $(PIP_DEV)),)
+	$(INSTALL_DEV) $(PIP_DEV) || true
+endif
+ifneq ($(strip $(PIP_ONLY)),)
+	$(RUN) pip install $(PIP_ONLY) || true
+endif
+ifeq ($(ENV),pipenv)
+	pipenv lock
+	pipenv update
+endif
 
 endif
 

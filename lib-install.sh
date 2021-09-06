@@ -244,6 +244,21 @@ if eval "[[ ! -v $lib_name ]]"; then
 		brew uninstall "$@"
 	}
 
+	# usage: brew_conflict package1 package2 new_packages
+	# error code 0 if there is a conflict
+	brew_conflict() {
+		local package1="$1"
+		shift
+		local package2="$2"
+		shift
+		# https://apple.stackexchange.com/posts/322371/revisions
+		if brew list "$package1" >& /dev/null && \
+			brew deps --tree "$@" | grep "$package2" &> /dev/null; then
+				return
+		fi
+		return 1
+	}
+
 	snap_install() {
 		for package in "$@"; do
 			if ! snap list "$package"; then

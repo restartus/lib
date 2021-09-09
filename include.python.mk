@@ -94,8 +94,8 @@ else ifeq ($(ENV),none)
 	# need a noop as this is not a modifier
 	# https://stackoverflow.com/questions/12404661/what-is-the-use-case-of-noop-in-bash
 	UPDATE := :
-	INSTALL :=
-	INSTALL_DEV :=
+	INSTALL := pip install
+	INSTALL_DEV := pip install
 	INSTALL_REQ :=
 endif
 
@@ -159,6 +159,11 @@ install: $(INSTALL_REQ)
 	@echo PIP=$(PIP)
 	@echo PIP_ONLY=$(PIP_ONLY)
 	@echo PIP_DEV=$(PIP_DEV)
+	@echo RUN=$(RUN)
+	@echo INSTALL=$(INSTALL)
+	@echo INSTALL_DEV=$(INSTALL_DEV)
+	@echo INSTALL_REQ=$(INSTALL_REQ)
+
 ifeq ($(ENV),conda)
 	conda env list | grep ^$(name) || conda create -y --name $(name)
 	conda config --env --add channels conda-forge

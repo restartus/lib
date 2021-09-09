@@ -350,30 +350,30 @@ if eval "[[ ! -v $lib_name ]]"; then
 		done
 		for package in "$@"; do
 			log_verbose "looking for $package"
-			# look for Mac apps in a cask
-			# Note that search only searches for default Mac apps
-			# so need to use info and for some reason head -n 1
-			# cause brew info to fail
-			local brew_cask
-			brew_cask="$(brew info --cask "$package" 2>&1)"
-			# Need the semicolon in case there is an error
-			# asking how many packages with similar names as with
-			# brew info parallel
-			if grep -q "^$package:" <<<"$brew_cask"; then
+			# before sept 2021 brew info and brew search
+			# did not return error code so had to grep it
+			# local brew_cask
+			# brew_cask="$(brew info --cask "$package" 2>&1)"
+			# if grep -q "^$package:" <<<"$brew_cask"; then
+			if ! brew list --cask "$package" &>/dev/null; then
 				# found a brew cask now see if it is installed
-				log_verbose "$package is brew cask"
-				if grep -q "Not installed" <<<"$brew_cask"; then
-					((++count))
-				fi
+				#if grep -q "Not installed" <<<"$brew_cask"; then
+				log_verbose "$package not installed as a brew cask"
+				((++count))
+				#fi
 				continue
 			fi
 
 			# now do the Mac checks
 			# see if the package is installed by homebrew
-			brew_info="$(brew info "$package" 2>&1)"
+			# https://osxdaily.com/2018/10/20/how-list-all-homebrew-packages-installed-mac/
+			# as of sept 2021 this method no long works not installed is not
+			# emitted
+			# brew_info="$(brew info "$package" 2>&1)"
 			# need the a quotes for the echo to retain the newlines
 			# shellcheck disable=SC2181
-			if (($? != 0)) || echo "$brew_info" | grep -q "^Not installed"; then
+			# if (($? != 0)) || echo "$brew_info" | grep -q "^Not installed"; then
+			if ! brew list "$package" &>/dev/null; then
 				log_verbose "$package is not installed as a brew package"
 				# no package see if it is available on brew
 				if is_brew_package "$package" >/dev/null; then
@@ -399,11 +399,7 @@ if eval "[[ ! -v $lib_name ]]"; then
 					# then force an uninstall to get it
 					quoted_flags="$(flags_to_grep "$flags")"
 					# if the package has the required flags go on to the next
-					if grep -q "$quoted_flags" <<<"$brew_info"; then
-						continue
-					fi
-					# the package does not have the needed flags
-					if brew list "$package" 2>&1 | grep -q "$quoted_flags"; then
+					if ! brew list "$package" 2>&1 | grep -q "$quoted_flags"; then
 						# if they are then uninstall the package to get ready
 						# for an install later
 						package_uninstall "$package"
@@ -447,15 +443,18 @@ if eval "[[ ! -v $lib_name ]]"; then
 			# with variable expansion os caskroom*$item*) does not match
 			# although  *$item*) does work for shell patterns even with shopt
 			# extglob set
-			local search
-			search=$(brew search "$item" 2>/dev/null)
+			# strings emitted by brew change so use brew info as of Sept 2021
+			#local search
+			#search=$(brew search "$item" 2>/dev/null)
 			# So use if then and full regex
-			if grep -q "^caskroom.*\/$item$" <<<"$search"; then
+			#if grep -q "^caskroom.*\/$item$" <<<"$search"; then
+			if brew info -q --cask "$item" &>/dev/null ; then
 				echo cask
 				continue
 			fi
-			if [[ $search =~ $item ]]; then
+			#if [[ $search =~ $item ]]; then
 				# the search could return a list of packages that match
+			if brew info -q -formula "$item" &>/dev/null; then
 				echo brew
 				continue
 			fi

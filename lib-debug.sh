@@ -106,6 +106,7 @@ if eval "[[ ! -v $lib_name ]]"; then
 
 	# When trace is off we temporarily stop debugging but remember so trace off
 	# works
+	# https://www.shell-tips.com/bash/debug-script/
 	trace_on() {
 		# -x is x-ray or detailed trace, -v is verbose, trap DEBUG single steps
 		if $DEBUG_SUSPEND; then
@@ -116,7 +117,10 @@ if eval "[[ ! -v $lib_name ]]"; then
 			if [[ ! $LOG_FLAGS =~ -d ]]; then
 				LOG_FLAGS+=" -d"
 			fi
-			set -vx -o functrace
+			set -vx -o functrace errtrace
+			shopt -s extdebug
+			# http://mywiki.wooledge.org/BashGuide/Practices#Debugging
+			# this does not work anymore as of Sept 2021 on Mac
 			trap '(read -p "[$BASH_SOURCE:$LINENO] $BASH_COMMAND?")' DEBUG
 		fi
 	}

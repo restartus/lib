@@ -252,9 +252,9 @@ if eval "[[ ! -v $lib_name ]]"; then
 		local package2="$2"
 		shift
 		# https://apple.stackexchange.com/posts/322371/revisions
-		if brew list "$package1" >& /dev/null && \
-			brew deps --tree "$@" | grep "$package2" &> /dev/null; then
-				return
+		if brew list "$package1" >&/dev/null &&
+			brew deps --tree "$@" | grep "$package2" &>/dev/null; then
+			return
 		fi
 		return 1
 	}
@@ -432,12 +432,13 @@ if eval "[[ ! -v $lib_name ]]"; then
 	is_brew_package() {
 		# need extglob http://www.gnu.org/software/bash/manual/bashref.html#Pattern-Matching
 		# remember current settings and flip back
-		local extglob_setting
-		extglob_setting=$(shopt extglob | awk '{print $2}')
 		local not_found=0
-		if [[ $extglob_setting == off ]]; then
-			shopt -s extglob >/dev/null
-		fi
+		# do not need this is for the old grep
+		#local extglob_setting
+		#extglob_setting=$(shopt extglob | awk '{print $2}')
+		#if [[ $extglob_setting == off ]]; then
+		#shopt -s extglob >/dev/null
+		#fi
 		for item in "$@"; do
 			# note a case statement does not work here because it cannot match
 			# with variable expansion os caskroom*$item*) does not match
@@ -448,21 +449,21 @@ if eval "[[ ! -v $lib_name ]]"; then
 			#search=$(brew search "$item" 2>/dev/null)
 			# So use if then and full regex
 			#if grep -q "^caskroom.*\/$item$" <<<"$search"; then
-			if brew info -q --cask "$item" &>/dev/null ; then
+			if brew info -q --cask "$item" &>/dev/null; then
 				echo cask
 				continue
 			fi
 			#if [[ $search =~ $item ]]; then
-				# the search could return a list of packages that match
+			# the search could return a list of packages that match
 			if brew info -q -formula "$item" &>/dev/null; then
 				echo brew
 				continue
 			fi
 			((++not_found))
 		done
-		if [[ $extglob_setting == off ]]; then
-			shopt -u extglob >/dev/null
-		fi
+		#if [[ $extglob_setting == off ]]; then
+		#shopt -u extglob >/dev/null
+		#fi
 		return "$not_found"
 	}
 

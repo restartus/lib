@@ -455,7 +455,7 @@ if eval "[[ ! -v $lib_name ]]"; then
 			fi
 			#if [[ $search =~ $item ]]; then
 			# the search could return a list of packages that match
-			if brew info -q -formula "$item" &>/dev/null; then
+			if brew info -q --formula "$item" &>/dev/null; then
 				echo brew
 				continue
 			fi
@@ -520,6 +520,7 @@ if eval "[[ ! -v $lib_name ]]"; then
 				mac_package install "$package" $flags
 				continue
 			fi
+			# only get here for linux so try linux brew first
 			# shellcheck disable=SC2086
 			if brew install "$package" $flags; then
 				continue

@@ -22,6 +22,28 @@ if eval "[[ ! -v $lib_name ]]"; then
 	# how to do an indirect reference
 	eval "$lib_name=true"
 
+	# look for a file name with a string complicated because there is not a name default
+	# the default is to look for Google Drive somewhere in the name
+	# if there are multiple accocunts
+	# echos the drives found on stdout
+	# returns 0 if files found, 1 if not files are found
+	util_find() {
+		local result
+		local text
+		if (($# > 1)); then
+			text="$*"
+		else
+			text="Google Drive"
+		fi
+		result=$(find -L "$HOME" -maxdepth 2 -name \*"$text"\* 2>/dev/null)
+		echo "$result"
+		# https://stackoverflow.com/questions/6314679/in-bash-how-do-i-count-the-number-of-lines-in-a-variable
+		# no each way to coerce count to a integer return code
+		if [[ -z "$result" ]]; then
+			return 1
+		fi
+	}
+
 	# run command and enable verbose and echo for dry run
 	# this require lib-log.sh
 	# usage util_cmd [-s] [-n] cmds...

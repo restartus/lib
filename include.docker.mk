@@ -49,6 +49,13 @@ PIP ?=
 # pip packages that cannot be conda installed
 PIP_ONLY ?=
 
+# assuming one keep the input open like docker -it
+STDIN_OPEN ?= true
+TTY ?= true
+
+# these are only for docker build
+# For docker compose you need an .env file instead
+DOCKER_ENV_FILE ?= docker-compose.env
 docker_flags ?= --build-arg "DOCKER_USER=$(DOCKER_USER)" \
 				--build-arg "DEST_DIR=$(DEST_DIR)" \
 				--build-arg "NB_USER=$(DOCKER_USER)" \
@@ -56,23 +63,25 @@ docker_flags ?= --build-arg "DOCKER_USER=$(DOCKER_USER)" \
 				--build-arg "PYTHON=$(PYTHON)" \
 				--build-arg "PIP=$(PIP)" \
 				--build-arg "PIP_ONLY=$(PIP_ONLY)" \
+				--build-arg "STDIN_OPEN=$(STDIN_OPEN)" \
+				--build-arg "TTY=$(TTY)" 
+
 # main.py includes streamlit code that only runs when streamlit invoked
 # --restart=unless-stopped  not needed now
 
 
 .PHONY: docker
-docker: $(Dockerfile)
+docker:
 	if [[ -r  "$(DOCKER_COMPOSE_YML)" ]]; then \
-		docker compose -f $(DOCKER_COMPOSE_YML) build --pull \
-					$(docker_flags); \
+		docker compose --env-file "${DOCKER_ENV_FILE}" -f "$(DOCKER_COMPOSE_YML)" build --pull && \
 		docker compose push; \
 	else \
 		docker build --pull \
 					$(docker_flags) \
 					 -f "$(Dockerfile)" \
 					 -t "$(image)" \
-					 $(build_path) ; \
-		docker tag $(image) $(image):$$(git rev-parse HEAD) ; \
+					 $(build_path) && \
+		docker tag $(image) $(image):$$(git rev-parse HEAD) && \
 		docker push $(image) ;\
 	fi
 
@@ -80,7 +89,7 @@ docker: $(Dockerfile)
 .PHONY: docker-lint
 docker-lint: $(Dockerfile)
 	if [[ -r $((DOCKER_COMPOSE_YML)) ]]; then \
-		docker compose -f "$(DOCKER_COMPOSE_YML)" config; \
+		docker compose --env-file "$(DOCKER_ENV_FILE)" -f "$(DOCKER_COMPOSE_YML)" config; \
 	else \
 		dockerfilelint $(Dockerfile); \
 	fi
@@ -108,8 +117,7 @@ push:
 .PHONY: no-cache
 no-cache: $(Dockerfile)
 	if [[ -e $(DOCKER_COMPOSE_YML) ]]; then \
-		docker compose -f "$(DOCKER_COMPOSE_YML)" build \
-			$(docker_flags) \
+		docker compose --env-file "$(DOCKER_ENV_FILE)" -f "$(DOCKER_COMPOSE_YML)" build \
 			--build-arg NB_USER=$(DOCKER_USER); \
 	else \
 		docker build --pull --no-cache \
@@ -153,7 +161,7 @@ stop:
 .PHONY: pull
 pull:
 	if [[ -r $(DOCKER_COMPOSE_YML) ]]; then \
-		docker compose -f "$(DOCKER_COMPOSE_YML)" pull; \
+		docker compose --env-file "$(DOCKER_ENV_FILE)" -f "$(DOCKER_COMPOSE_YML)" pull; \
 	else \
 		docker pull $(image); \
 	fi
@@ -195,7 +203,7 @@ pull:
 .PHONY: run
 run: stop
 	if [[ -r $(DOCKER_COMPOSE_YML) ]]; then \
-		docker compose -f "$(DOCKER_COMPOSE_YML)" up -d  && \
+		docker compose --env-file "$(DOCKER_ENV_FILE)" -f "$(DOCKER_COMPOSE_YML)" up -d  && \
 		sleep 5 && \
 		docker compose logs \
 	; else \
@@ -209,7 +217,7 @@ run: stop
 .PHONY: exec
 exec: stop
 	if [[ -r $(DOCKER_COMPOSE_YML) ]]; then \
-		docker compose -f "$(DOCKER_COMPOSE_YML)" up \
+		docker compose --env-file "$(DOCKER_ENV_FILE)" -f "$(DOCKER_COMPOSE_YML)" up \
 	; else \
 		$(docker_run) -t $(cmd) \
 	; fi
@@ -220,7 +228,7 @@ exec: stop
 .PHONY: shell
 shell:
 	if [[ -r $(DOCKER_COMPOSE_YML) ]]; then \
-		docker compose -f "$(DOCKER_COMPOSE_YML)" run "$(DOCKER_COMPOSE_MAIN)" /bin/bash; \
+		docker compose --env-file "$(DOCKER_ENV_FILE)" -f "$(DOCKER_COMPOSE_YML)" run "$(DOCKER_COMPOSE_MAIN)" /bin/bash; \
 	else \
 		docker pull $(image); \
 		docker run -it \
@@ -232,7 +240,7 @@ shell:
 .PHONY: resume
 resume:
 	if [[ -r $(DOCKER_COMPOSE_YML) ]]; then \
-		docker compose start; \
+		docker compose --env-file "$(DOCKER_ENV_FILE)" start; \
 	else \
 		docker start -ai $(container); \
 	fi

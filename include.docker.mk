@@ -66,15 +66,15 @@ docker_flags ?= --build-arg "DOCKER_USER=$(DOCKER_USER)" \
 				--build-arg "STDIN_OPEN=$(STDIN_OPEN)" \
 				--build-arg "TTY=$(TTY)" 
 
-# main.py includes streamlit code that only runs when streamlit invoked
-# --restart=unless-stopped  not needed now
+# Guess the name of the main container is called main
+DOCKER_COMPOSE_MAIN ?= main
 
-
+## docker: build and push the images
 .PHONY: docker
 docker:
 	if [[ -r  "$(DOCKER_COMPOSE_YML)" ]]; then \
 		docker compose --env-file "${DOCKER_ENV_FILE}" -f "$(DOCKER_COMPOSE_YML)" build --pull && \
-		docker compose push; \
+		docker compose --env-file "${DOCKER_ENV_FILE}" push; \
 	else \
 		docker build --pull \
 					$(docker_flags) \
@@ -151,7 +151,7 @@ docker_run = bash -c ' \
 .PHONY: stop
 stop:
 	if [[ -r $(DOCKER_COMPOSE_YML) ]]; then \
-		docker compose -f "$(DOCKER_COMPOSE_YML)" down \
+		docker compose --env-file "${DOCKER_ENV_FILE}" -f "$(DOCKER_COMPOSE_YML)" down \
 	; else \
 		$(for_containers) $(container) stop > /dev/null && \
 		$(for_containers) $(container) "rm -v" > /dev/null \
@@ -205,7 +205,7 @@ run: stop
 	if [[ -r $(DOCKER_COMPOSE_YML) ]]; then \
 		docker compose --env-file "$(DOCKER_ENV_FILE)" -f "$(DOCKER_COMPOSE_YML)" up -d  && \
 		sleep 5 && \
-		docker compose logs \
+		docker compose --env-file "$(DOCKER_ENV_FILE)" logs \
 	; else \
 		$(docker_run) -dt $(cmd) \
 	; fi
@@ -222,7 +222,7 @@ exec: stop
 		$(docker_run) -t $(cmd) \
 	; fi
 
-## shell: run the interactive shell in the container
+## shell: start and new container and run the interactive shell 
 # https://gist.github.com/mitchwongho/11266726
 # Need entrypoint to make sure we get something interactive
 .PHONY: shell

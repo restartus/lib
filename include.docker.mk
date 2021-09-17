@@ -8,8 +8,8 @@
 # The makefiles are self documenting, you use two leading for make help to produce output
 
 # YOu will want to change these depending on the image and the org
-repo ?= "richt"
-name ?= "$$(basename $(PWD))"
+repo ?= richt
+name ?= $(shell basename $(PWD))
 SHELL := /usr/bin/env bash
 DOCKER_COMPOSE_YML ?= docker-compose.yml
 DOCKER_USER ?= docker
@@ -20,6 +20,8 @@ SRC_DIR ?= $(CURDIR)/data
 # volumes ?= -v "$$(readlink -f "./data"):$(DEST_DIR)"
 volumes ?= --mount "type=bind,source=$(SRC_DIR),target=$(DEST_DIR)"
 flags ?=
+# need the right UID for correct volume permissions
+LOCAL_USER_ID ?= $(shell echo $$UID)
 
 Dockerfile ?= Dockerfile
 #
@@ -73,7 +75,7 @@ DOCKER_COMPOSE_MAIN ?= main
 .PHONY: docker
 docker:
 	if [[ -r  "$(DOCKER_COMPOSE_YML)" ]]; then \
-		docker compose --env-file "${DOCKER_ENV_FILE}" -f "$(DOCKER_COMPOSE_YML)" build --pull && \
+		LOCAL_USER_ID=$(LOCAL_USER_ID) docker compose --env-file "${DOCKER_ENV_FILE}" -f "$(DOCKER_COMPOSE_YML)" build --pull && \
 		docker compose --env-file "${DOCKER_ENV_FILE}" push; \
 	else \
 		docker build --pull \
@@ -89,7 +91,7 @@ docker:
 .PHONY: docker-lint
 docker-lint: $(Dockerfile)
 	if [[ -r $((DOCKER_COMPOSE_YML)) ]]; then \
-		docker compose --env-file "$(DOCKER_ENV_FILE)" -f "$(DOCKER_COMPOSE_YML)" config; \
+		LOCAL_USER_ID=$(LOCAL_USER_ID) docker compose --env-file "$(DOCKER_ENV_FILE)" -f "$(DOCKER_COMPOSE_YML)" config; \
 	else \
 		dockerfilelint $(Dockerfile); \
 	fi
@@ -106,7 +108,7 @@ docker-test:
 push:
 	# need to push and pull to make sure the entire cluster has the right images
 	if [[ -r $(DOCKER_COMPOSE_YML) ]]; then \
-		docker-compuse -f "$(DOCKER_COMPOSE_YML)" push; \
+		docker compose -f "$(DOCKER_COMPOSE_YML)" push; \
 	else \
 		docker push $(image); \
 	fi
@@ -117,7 +119,7 @@ push:
 .PHONY: no-cache
 no-cache: $(Dockerfile)
 	if [[ -e $(DOCKER_COMPOSE_YML) ]]; then \
-		docker compose --env-file "$(DOCKER_ENV_FILE)" -f "$(DOCKER_COMPOSE_YML)" build \
+		LOCAL_USER_ID=$(LOCAL_USER_ID) docker compose --env-file "$(DOCKER_ENV_FILE)" -f "$(DOCKER_COMPOSE_YML)" build \
 			--build-arg NB_USER=$(DOCKER_USER); \
 	else \
 		docker build --pull --no-cache \
@@ -151,7 +153,7 @@ docker_run = bash -c ' \
 .PHONY: stop
 stop:
 	if [[ -r $(DOCKER_COMPOSE_YML) ]]; then \
-		docker compose --env-file "${DOCKER_ENV_FILE}" -f "$(DOCKER_COMPOSE_YML)" down \
+		LOCAL_USER_ID=$(LOCAL_USER_ID) docker compose --env-file "${DOCKER_ENV_FILE}" -f "$(DOCKER_COMPOSE_YML)" down \
 	; else \
 		$(for_containers) $(container) stop > /dev/null && \
 		$(for_containers) $(container) "rm -v" > /dev/null \
@@ -161,7 +163,7 @@ stop:
 .PHONY: pull
 pull:
 	if [[ -r $(DOCKER_COMPOSE_YML) ]]; then \
-		docker compose --env-file "$(DOCKER_ENV_FILE)" -f "$(DOCKER_COMPOSE_YML)" pull; \
+		LOCAL_USER_ID=$(LOCAL_USER_ID) docker compose --env-file "$(DOCKER_ENV_FILE)" -f "$(DOCKER_COMPOSE_YML)" pull; \
 	else \
 		docker pull $(image); \
 	fi
@@ -203,7 +205,7 @@ pull:
 .PHONY: run
 run: stop
 	if [[ -r $(DOCKER_COMPOSE_YML) ]]; then \
-		docker compose --env-file "$(DOCKER_ENV_FILE)" -f "$(DOCKER_COMPOSE_YML)" up -d  && \
+		LOCAL_USER_ID=$(LOCAL_USER_ID) docker compose --env-file "$(DOCKER_ENV_FILE)" -f "$(DOCKER_COMPOSE_YML)" up -d  && \
 		sleep 5 && \
 		docker compose --env-file "$(DOCKER_ENV_FILE)" logs \
 	; else \
@@ -217,7 +219,7 @@ run: stop
 .PHONY: exec
 exec: stop
 	if [[ -r $(DOCKER_COMPOSE_YML) ]]; then \
-		docker compose --env-file "$(DOCKER_ENV_FILE)" -f "$(DOCKER_COMPOSE_YML)" up \
+		LOCAL_USER_ID=$(LOCAL_USER_ID) docker compose --env-file "$(DOCKER_ENV_FILE)" -f "$(DOCKER_COMPOSE_YML)" up \
 	; else \
 		$(docker_run) -t $(cmd) \
 	; fi
@@ -228,7 +230,7 @@ exec: stop
 .PHONY: shell
 shell:
 	if [[ -r $(DOCKER_COMPOSE_YML) ]]; then \
-		docker compose --env-file "$(DOCKER_ENV_FILE)" -f "$(DOCKER_COMPOSE_YML)" run "$(DOCKER_COMPOSE_MAIN)" /bin/bash; \
+		LOCAL_USER_ID=$(LOCAL_USER_ID) docker compose --env-file "$(DOCKER_ENV_FILE)" -f "$(DOCKER_COMPOSE_YML)" run "$(DOCKER_COMPOSE_MAIN)" /bin/bash; \
 	else \
 		docker pull $(image); \
 		docker run -it \
@@ -240,7 +242,7 @@ shell:
 .PHONY: resume
 resume:
 	if [[ -r $(DOCKER_COMPOSE_YML) ]]; then \
-		docker compose --env-file "$(DOCKER_ENV_FILE)" start; \
+		LOCAL_USER_ID=$(LOCAL_USER_ID) docker compose --env-file "$(DOCKER_ENV_FILE)" start; \
 	else \
 		docker start -ai $(container); \
 	fi
